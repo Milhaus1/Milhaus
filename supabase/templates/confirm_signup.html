@@ -1,0 +1,24 @@
+<!-- supabase/templates/confirm_signup.html -->
+<!--
+  Custom "Confirm signup" email template: what a brand-new user gets the
+  first time they sign in. Until 2026-11-16 only the Magic Link template
+  (magic_link.html) had been customized, so new users got Supabase's
+  default instead: no code, and a link through Supabase that landed on the
+  project's Site URL (still an old address at the time), not on Milhaus.
+  Found when a new user on the live site got a link instead of the code the
+  sign-in form asks for.
+
+  Same content as magic_link.html: the link goes to our own /auth/confirm
+  page (a button, so email link-scanners can't spend the one-time token),
+  and {{ .Token }} is the code typed into the sign-in form. type=email
+  verifies sign-up codes too.
+
+  Paste into Supabase -> Authentication -> Emails -> Templates ->
+  Confirm signup (Subject: "Your Milhaus sign-in code"). See supabase/SETUP.md.
+-->
+<h2>Welcome to Milhaus</h2>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Click here to finish signing up</a></p>
+<p>Or enter this code on the sign-in page:</p>
+<p style="font-size:22px;font-family:monospace;letter-spacing:4px"><strong>{{ .Token }}</strong></p>
+<p>The link and the code both expire in one hour, and each can only be used once.</p>
+<p>If you did not request this, you can safely ignore this email.</p>

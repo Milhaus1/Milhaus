@@ -64,6 +64,13 @@ takes it directly, and it can't be consumed by a link scanner. If users
 report "link expired or already used" on every attempt, that's a scanner
 in their mail/browser stack — the code path gets them in regardless.
 
+**Confirm signup template too.** A brand-new user gets the **Confirm
+signup** email, not Magic Link. Paste
+`supabase/templates/confirm_signup.html` into **Authentication → Emails →
+Templates → Confirm signup** as well. Left as Supabase's default, new users
+get a link with no code that lands on the Site URL instead of Milhaus
+(seen on the live site, 2026-11-16).
+
 ## 3a. Auth: email rate limit (important for testing)
 
 New hosted projects use Supabase's shared email service, capped at
