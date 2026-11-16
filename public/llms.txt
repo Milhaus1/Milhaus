@@ -1,6 +1,6 @@
 # Milhaus
 
-> Milhaus (www.milhaus.de) is a marketplace for Americans living in Germany — U.S. military service members, DoD civilians, their families, and expats. In one place it lists homes for rent and for sale, cars, trusted local businesses, special offers from those businesses, and community events, centred on the areas around U.S. bases: Stuttgart, Kaiserslautern, Ramstein, Wiesbaden, Grafenwöhr and Spangdahlem.
+> Milhaus (www.milhaus.de) is a marketplace for Americans living in Germany — U.S. military service members, DoD civilians, their families, and expats. In one place it lists homes for rent and for sale, cars, trusted local businesses, special offers from those businesses, and community events, centred on the areas around U.S. bases: Stuttgart, Kaiserslautern, Ramstein, Wiesbaden, Grafenwöhr, Spangdahlem and Ansbach.
 
 Milhaus is independent. It is not run by, affiliated with, or endorsed by any military installation's Housing Office or the U.S. Department of Defense.
 
