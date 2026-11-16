@@ -32,7 +32,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AdminBusinessesPage() {
+export default async function AdminBusinessesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string; error?: string }>;
+}) {
+  // What the last button did (set by backWith() in ./actions.ts) — added
+  // 2026-11-16 after the buttons "did nothing" with no explanation.
+  const { notice, error } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -56,6 +63,16 @@ export default async function AdminBusinessesPage() {
           of action buttons plus the consent form, and at 1000px the last
           buttons were cut off (Terry, 2026-11-04). */}
       <div className="mx-auto max-w-[1400px] px-8">
+        {error && (
+          <p role="alert" className="mb-6 rounded-md border border-rust/30 bg-rust/10 px-4 py-3 text-sm text-rust">
+            {error}
+          </p>
+        )}
+        {notice && !error && (
+          <p role="status" className="mb-6 rounded-md border border-olive/30 bg-olive/10 px-4 py-3 text-sm text-olive-deep">
+            {notice}
+          </p>
+        )}
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <Link href="/admin" className="mb-2 inline-block text-sm text-ink-soft hover:text-ink">

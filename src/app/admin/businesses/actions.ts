@@ -6,7 +6,7 @@
 // Charlie obtained himself (a signed paper form, a verbal yes), and
 // resending the confirmation email for one still waiting on it.
 // Authorization for the plain CRUD is enforced by the businesses RLS
-// policies (admin-only writes), not re-checked here — same pattern as
+// policies (admin/owner-only writes, via is_admin()), not re-checked here — same pattern as
 // the other admin actions. The consent-log writes go through the admin
 // client regardless, same reasoning as the public /consent/[token]
 // actions: it's an audit trail, not something any authenticated role
@@ -36,6 +36,22 @@ function revalidateBusinessPaths() {
   revalidatePath("/services");
   revalidatePath("/");
 }
+
+/** Back to Admin → Businesses with a message on the page, so every button
+ * says what happened. Added 2026-11-16: until then the buttons gave no
+ * feedback at all, and when the database quietly refused Charlie's
+ * changes (the businesses policy only allowed 'admin', not his 'owner'
+ * role — see 20261116170000_businesses_admin_policy_includes_owner.sql)
+ * he just saw the page reload and thought the buttons were broken. */
+function backWith(kind: "notice" | "error", message: string): never {
+  redirect(`/admin/businesses?${kind}=${encodeURIComponent(message)}`);
+}
+
+/** An update or delete that matched no rows means the database refused it
+ * (row-level security doesn't raise an error, it just changes nothing) or
+ * the business is gone. Say so instead of pretending it worked. */
+const NOT_SAVED =
+  "That change wasn't saved — the database refused it. Your account may not have admin rights; ask your developer to check.";
 
 /** Admin → Businesses → Add a business: Charlie adds one himself, choosing
  * how its consent was (or will be) obtained — see the file header. */
@@ -158,13 +174,19 @@ export async function approveBusiness(formData: FormData) {
   const supabase = await createClient();
   const { data: business } = await supabase.from("businesses").select("consent_status").eq("id", id).single();
   if (business?.consent_status !== "confirmed") {
-    throw new Error("Consent isn't confirmed yet — can't publish this business until it is.");
+    backWith("error", "Consent isn't confirmed yet — can't publish this business until it is.");
   }
 
-  const { error } = await supabase.from("businesses").update({ status: "active", is_active: true }).eq("id", id);
-  if (error) throw new Error(error.message);
+  const { data: saved, error } = await supabase
+    .from("businesses")
+    .update({ status: "active", is_active: true })
+    .eq("id", id)
+    .select("id");
+  if (error) backWith("error", error.message);
+  if (!saved?.length) backWith("error", NOT_SAVED);
 
   revalidateBusinessPaths();
+  backWith("notice", "Approved — the business is now live on the Services page.");
 }
 
 /** Charlie recording consent he obtained outside the email flow, for a
@@ -179,7 +201,7 @@ export async function recordManualConsent(formData: FormData) {
 
   const supabase = await createClient();
   const { data: business } = await supabase.from("businesses").select("email, name").eq("id", id).single();
-  if (!business) throw new Error("Business not found.");
+  if (!business) backWith("error", "Business not found.");
 
   let consentProofUrl: string | null = null;
   const proofFile = formData.get("consentProof") as File | null;
@@ -187,12 +209,12 @@ export async function recordManualConsent(formData: FormData) {
     const ext = proofFile.name.split(".").pop() || "pdf";
     const path = `${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage.from("consent-documents").upload(path, proofFile);
-    if (uploadError) throw new Error(uploadError.message);
+    if (uploadError) backWith("error", `The proof file couldn't be uploaded: ${uploadError.message}`);
     const { data: urlData } = supabase.storage.from("consent-documents").getPublicUrl(path);
     consentProofUrl = urlData.publicUrl;
   }
 
-  const { error } = await supabase
+  const { data: saved, error } = await supabase
     .from("businesses")
     .update({
       consent_status: "confirmed",
@@ -201,8 +223,13 @@ export async function recordManualConsent(formData: FormData) {
       consent_note: note,
       ...(consentProofUrl ? { consent_proof_url: consentProofUrl } : {}),
     })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+    .eq("id", id)
+    .select("id");
+  if (error) backWith("error", error.message);
+  // Only log consent once it's really saved — on 2026-11-16 the audit log
+  // recorded five "confirmed" clicks for a business the database had
+  // refused to change.
+  if (!saved?.length) backWith("error", NOT_SAVED);
 
   const admin = createAdminClient();
   await admin.from("business_consent_log").insert({
@@ -220,6 +247,7 @@ export async function recordManualConsent(formData: FormData) {
   await tryActivateBusiness(id);
 
   revalidateBusinessPaths();
+  backWith("notice", `Consent recorded for ${business.name}.`);
 }
 
 /** For a business still waiting on the emailed link — Charlie nudging
@@ -234,7 +262,7 @@ export async function resendConsentEmail(formData: FormData) {
     .eq("id", id)
     .single();
   if (!business?.email || !business.consent_token) {
-    throw new Error("This business has no email or consent token on file.");
+    backWith("error", "This business has no email or consent token on file.");
   }
 
   const sent = await sendConsentRequestEmail({
@@ -257,6 +285,15 @@ export async function resendConsentEmail(formData: FormData) {
   });
 
   revalidateBusinessPaths();
+  // sendEmail returns false (never throws) when the site's email isn't
+  // set up or Resend refuses — tell Charlie rather than look like success.
+  if (!sent) {
+    backWith(
+      "error",
+      "The email could not be sent. The site's email settings (RESEND_API_KEY and EMAIL_FROM in Vercel) may be missing or wrong. You can record consent by hand below instead.",
+    );
+  }
+  backWith("notice", `Consent email sent to ${business.email}.`);
 }
 
 /** Admin → Businesses → "Hide" / "Unhide" in the public directory. */
@@ -265,10 +302,16 @@ export async function toggleBusinessActive(formData: FormData) {
   const isActive = formData.get("isActive") === "true";
 
   const supabase = await createClient();
-  const { error } = await supabase.from("businesses").update({ is_active: !isActive }).eq("id", id);
-  if (error) throw new Error(error.message);
+  const { data: saved, error } = await supabase
+    .from("businesses")
+    .update({ is_active: !isActive })
+    .eq("id", id)
+    .select("id");
+  if (error) backWith("error", error.message);
+  if (!saved?.length) backWith("error", NOT_SAVED);
 
   revalidateBusinessPaths();
+  backWith("notice", isActive ? "Hidden from the Services page." : "Shown on the Services page again.");
 }
 
 /** Admin → Businesses → "Feature" / "Unfeature" on the homepage's Featured Businesses row. */
@@ -277,10 +320,16 @@ export async function toggleBusinessFeatured(formData: FormData) {
   const isFeatured = formData.get("isFeatured") === "true";
 
   const supabase = await createClient();
-  const { error } = await supabase.from("businesses").update({ is_featured: !isFeatured }).eq("id", id);
-  if (error) throw new Error(error.message);
+  const { data: saved, error } = await supabase
+    .from("businesses")
+    .update({ is_featured: !isFeatured })
+    .eq("id", id)
+    .select("id");
+  if (error) backWith("error", error.message);
+  if (!saved?.length) backWith("error", NOT_SAVED);
 
   revalidateBusinessPaths();
+  backWith("notice", isFeatured ? "No longer featured on the homepage." : "Featured on the homepage.");
 }
 
 /** Admin → Businesses → "Delete". The consent audit log is kept (see
@@ -289,8 +338,10 @@ export async function deleteBusiness(formData: FormData) {
   const id = formData.get("id") as string;
 
   const supabase = await createClient();
-  const { error } = await supabase.from("businesses").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  const { data: deleted, error } = await supabase.from("businesses").delete().eq("id", id).select("id");
+  if (error) backWith("error", error.message);
+  if (!deleted?.length) backWith("error", NOT_SAVED);
 
   revalidateBusinessPaths();
+  backWith("notice", "Business deleted.");
 }
