@@ -3,6 +3,15 @@
 // shared by BusinessCard (the directory tile) and the business profile
 // page, split out so neither has to duplicate the icon SVGs or the
 // wa.me/tel: URL-building logic.
+//
+// A client component because of the onClick below. Without "use client"
+// the homepage crashed (500) the moment the first real business with a
+// website or phone went live, 2026-11-17: a server-rendered page can't
+// hand a click handler to an <a>. It went unnoticed before because the
+// demo businesses were removed on 2026-11-14 (the /services page itself
+// kept working; only the homepage's Featured Businesses row crashed).
+
+"use client";
 
 import type { Business } from "@/lib/businesses";
 
