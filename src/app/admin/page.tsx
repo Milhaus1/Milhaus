@@ -181,6 +181,13 @@ export default async function AdminPage() {
               >
                 Events
               </Link>
+              {/* Checks the site's email settings and sends a test (2026-11-17). */}
+              <Link
+                href="/admin/email-check"
+                className="rounded-md border border-canvas-deep px-5 py-2.5 text-sm font-semibold text-ink-soft transition-[transform] hover:-translate-y-px hover:border-ink hover:text-ink"
+              >
+                Email check
+              </Link>
             </div>
             <div className="mx-1 hidden h-7 w-px bg-canvas-deep sm:block" aria-hidden="true" />
             <Link

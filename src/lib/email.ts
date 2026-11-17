@@ -23,7 +23,18 @@ type SendEmailInput = {
  * request that can't be emailed yet shouldn't block the submission
  * itself — Charlie can still record consent manually (paper form,
  * verbal) while Resend isn't set up. */
-export async function sendEmail({ to, subject, html, replyTo }: SendEmailInput): Promise<boolean> {
+export async function sendEmail(input: SendEmailInput): Promise<boolean> {
+  return (await trySendEmail(input)).ok;
+}
+
+export type SendEmailResult = { ok: true } | { ok: false; reason: string };
+
+/** Same as sendEmail, but says why a send failed, in words Charlie can
+ * act on. Split out 2026-11-17 for Admin → Email check: after the
+ * handover the site's emails silently stopped, and the only clue was a
+ * line in Vercel's logs that nobody could find (the suspect: an API key pasted into EMAIL_FROM,
+ * which should be the sender address). */
+export async function trySendEmail({ to, subject, html, replyTo }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
 
@@ -33,7 +44,8 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailInput):
         "Copy .env.example to .env.local and fill in a Resend API key and a " +
         "sender address on a domain verified with Resend.",
     );
-    return false;
+    const missing = [!apiKey && "RESEND_API_KEY", !from && "EMAIL_FROM"].filter(Boolean).join(" and ");
+    return { ok: false, reason: `${missing} is not set in Vercel (or the site wasn't redeployed after setting it).` };
   }
 
   try {
@@ -47,12 +59,34 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailInput):
     });
 
     if (!response.ok) {
-      console.error(`[email] Resend rejected the send (${response.status}): ${await response.text()}`);
-      return false;
+      const body = await response.text();
+      console.error(`[email] Resend rejected the send (${response.status}): ${body}`);
+      let message = body;
+      try {
+        message = (JSON.parse(body) as { message?: string }).message ?? body;
+      } catch {
+        // Not JSON — keep the raw text.
+      }
+      return { ok: false, reason: `Resend refused it (${response.status}): ${message}` };
     }
-    return true;
+    return { ok: true };
   } catch (error) {
     console.error("[email] Failed to send:", error);
-    return false;
+    return { ok: false, reason: `Couldn't reach Resend: ${error instanceof Error ? error.message : String(error)}` };
   }
+}
+
+/** What the live site sees for its email settings, safe to show on an
+ * admin page: never the key itself, only whether it looks like a Resend
+ * key. EMAIL_FROM isn't secret (it's the From line of every email). */
+export function emailSettingsSummary() {
+  const apiKey = process.env.RESEND_API_KEY ?? "";
+  const from = process.env.EMAIL_FROM ?? "";
+  return {
+    keySet: apiKey.length > 0,
+    keyLooksRight: apiKey.startsWith("re_") && !/\s/.test(apiKey),
+    keyLength: apiKey.length,
+    from,
+    fromLooksRight: /^[^<>]*<[^@\s<>]+@milhaus\.de>$|^[^@\s<>]+@milhaus\.de$/.test(from.trim()) && from === from.trim(),
+  };
 }
