@@ -202,6 +202,13 @@ export default async function AdminBusinessesPage({
                             </button>
                           </form>
                         )}
+                        {/* Edit page shared with the business's own account (2026-11-17). */}
+                        <Link
+                          href={`/edit-business/${b.id}`}
+                          className="rounded-md border border-canvas-deep whitespace-nowrap px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-olive hover:text-olive-deep"
+                        >
+                          Edit
+                        </Link>
                         <form action={toggleBusinessActive}>
                           <input type="hidden" name="id" value={b.id} />
                           <input type="hidden" name="isActive" value={String(b.isActive)} />

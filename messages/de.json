@@ -649,7 +649,12 @@
     "expiredNote": "Nach 30 Tagen von der Website genommen. Verlängern, um es weitere 30 Tage online zu stellen.",
     "expiresOn": "Online bis {date}",
     "renew": "Um 30 Tage verlängern",
-    "myAds": "Meine Anzeigen"
+    "myAds": "Meine Anzeigen",
+    "businessesHeading": "Ihre Unternehmen",
+    "businessLive": "Online",
+    "businessWaitingConsent": "Wartet darauf, dass das Unternehmen unsere E-Mail bestätigt",
+    "businessWaitingPayment": "Wartet auf Zahlung",
+    "businessHidden": "Nicht auf der Website sichtbar"
   },
   "ReportListing": {
     "button": "Anzeige melden",
@@ -915,5 +920,22 @@
   "PromoBanner": {
     "message": "🎉 Für kurze Zeit kostenlos inserieren — stell noch heute eine Wohnung, ein Haus oder ein Auto ein.",
     "dismiss": "Schließen"
+  },
+  "EditBusinessPage": {
+    "heading": "Ihr Unternehmen bearbeiten",
+    "body": "Ändern Sie, was Sie möchten, und klicken Sie auf „Änderungen speichern“. Ist das Unternehmen online, bleibt es online.",
+    "backToMyListings": "Meine Anzeigen",
+    "saved": "Gespeichert.",
+    "viewIt": "Unternehmensseite ansehen",
+    "nameLocked": "Um den Namen des Unternehmens zu ändern, schreiben Sie an info@milhaus.de.",
+    "emailLocked": "Mit dieser Adresse wurde der Eintrag bestätigt, deshalb kann sie hier nicht geändert werden. Für eine andere E-Mail-Adresse schreiben Sie an info@milhaus.de.",
+    "logo": "Logo (optional)",
+    "cover": "Titelbild (optional)",
+    "pictureKeep": "Wählen Sie eine Datei, um es zu ersetzen, oder lassen Sie das Feld leer, um es zu behalten. Bis 3 MB.",
+    "pictureNone": "Bis 3 MB.",
+    "pictureRemove": "Dieses Bild entfernen",
+    "save": "Änderungen speichern",
+    "notYoursHeading": "Sie können dieses Unternehmen nicht bearbeiten",
+    "notYoursBody": "Nur das Konto, mit dem es eingetragen wurde, kann es bearbeiten. Wenn es Ihres ist, melden Sie sich mit diesem Konto an."
   }
 }

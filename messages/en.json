@@ -649,7 +649,12 @@
     "expiredNote": "Off the site after 30 days. Renew to put it back up for another 30.",
     "expiresOn": "Live until {date}",
     "renew": "Renew for 30 days",
-    "myAds": "My ads"
+    "myAds": "My ads",
+    "businessesHeading": "Your businesses",
+    "businessLive": "Live",
+    "businessWaitingConsent": "Waiting for the business to confirm the email we sent",
+    "businessWaitingPayment": "Waiting for payment",
+    "businessHidden": "Not shown on the site"
   },
   "ReportListing": {
     "button": "Report this listing",
@@ -915,5 +920,22 @@
   "PromoBanner": {
     "message": "🎉 Free to post for a limited time — list a home, car, or item today.",
     "dismiss": "Dismiss"
+  },
+  "EditBusinessPage": {
+    "heading": "Edit your business",
+    "body": "Change anything below and press Save changes. If the business is live, it stays live.",
+    "backToMyListings": "My listings",
+    "saved": "Saved.",
+    "viewIt": "View the business page",
+    "nameLocked": "To change the business name, write to info@milhaus.de.",
+    "emailLocked": "This is the address that confirmed the listing, so it can't be changed here. To use a different email, write to info@milhaus.de.",
+    "logo": "Logo (optional)",
+    "cover": "Cover image (optional)",
+    "pictureKeep": "Choose a file to replace it, or leave empty to keep it. Up to 3 MB.",
+    "pictureNone": "Up to 3 MB.",
+    "pictureRemove": "Remove this picture",
+    "save": "Save changes",
+    "notYoursHeading": "You can't edit this business",
+    "notYoursBody": "Only the account that listed it can edit it. If it's yours, sign in with that account."
   }
 }

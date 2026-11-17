@@ -8,6 +8,11 @@
 //
 // Content editing lives at /edit-listing/[id] (the Edit button on each
 // row); the status buttons here stay one-click.
+//
+// "Your businesses" (2026-11-17): businesses listed from this account,
+// each with an Edit button to /edit-business/[id]. Until then a business
+// couldn't be changed at all after it was submitted — Charlie found that
+// with The Used Car Guys Stuttgart.
 
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -76,11 +81,17 @@ export default async function MyListingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?next=/my-listings");
 
-  const [listings, profile, { count: adSpotCount }] = await Promise.all([
+  const [listings, profile, { count: adSpotCount }, { data: businesses }] = await Promise.all([
     getMyListings(user.id),
     getProfile(user.id),
     // Only advertisers get the My ads button — most posters never buy one.
     supabase.from("ad_slots").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
+    // "businesses: owners read their own" RLS lets this see hidden ones too.
+    supabase
+      .from("businesses")
+      .select("id, name, city, status, is_active, consent_status")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const groups: { status: ListingStatus; heading: string; empty: string }[] = [
@@ -140,6 +151,50 @@ export default async function MyListingsPage() {
           <div className="mb-10">
             <ProfileEditor profile={profile} />
           </div>
+        )}
+
+        {businesses && businesses.length > 0 && (
+          <section className="mb-8">
+            <h2 className="mb-3 font-display text-lg font-semibold text-ink">
+              {t("businessesHeading")}
+              <span className="ml-2 rounded-full bg-canvas-deep px-2 py-0.5 align-middle font-mono text-xs text-ink-soft">
+                {businesses.length}
+              </span>
+            </h2>
+            <div className="flex flex-col gap-2.5">
+              {businesses.map((business) => {
+                const live = business.status === "active" && business.is_active;
+                const state = live
+                  ? t("businessLive")
+                  : business.consent_status === "pending"
+                    ? t("businessWaitingConsent")
+                    : business.status === "draft"
+                      ? t("businessWaitingPayment")
+                      : t("businessHidden");
+                return (
+                  <div
+                    key={business.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-canvas-deep bg-paper p-4"
+                  >
+                    <div className="min-w-0">
+                      <Link href={`/businesses/${business.id}`} className="font-semibold text-ink hover:underline">
+                        {business.name}
+                      </Link>
+                      <p className="font-mono text-xs text-ink-soft">
+                        {business.city} · <span className={live ? "text-olive-deep" : "text-rust"}>{state}</span>
+                      </p>
+                    </div>
+                    <Link
+                      href={`/edit-business/${business.id}`}
+                      className="rounded-md border border-canvas-deep px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-olive hover:text-olive-deep"
+                    >
+                      {t("edit")}
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {groups.map(({ status, heading, empty }) => {
