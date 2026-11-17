@@ -47,6 +47,10 @@ export async function confirmConsent(formData: FormData) {
     email: business.email ?? "",
     ip_address: ip,
     token,
+    // Recorded so the log says how consent was given, like the manual
+    // entries from Admin do — it was left blank until 2026-11-17, when
+    // the first real confirmation (Charlie's own test) showed the gap.
+    consent_method: "email",
   });
 
   // Consent is the one thing standing between a paid business listing and
@@ -83,6 +87,7 @@ export async function declineConsent(formData: FormData) {
     email: business.email ?? "",
     ip_address: ip,
     token,
+    consent_method: "email",
     note: "Declined via the confirmation link — did not recognize or did not authorize this listing.",
   });
 
