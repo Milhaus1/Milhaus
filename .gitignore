@@ -41,3 +41,22 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# Loose documents and pictures in the top folder are never part of the
+# site (its images live in public/). Added 2026-11-17 after a commit-all
+# pushed "Supabase project URL.docx" — a copy of the site's secret keys —
+# to the public repo. Keep notes like that outside this folder entirely.
+/*.doc
+/*.docx
+/*.pdf
+/*.xls
+/*.xlsx
+/*.ppt
+/*.pptx
+/*.pages
+/*.numbers
+/*.key
+/*.jpg
+/*.jpeg
+/*.png
+/*.heic
