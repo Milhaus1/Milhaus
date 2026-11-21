@@ -129,10 +129,12 @@ export default async function AdminEditEventPage({
               <input
                 id="organizerName"
                 name="organizerName"
-                required
                 defaultValue={event.organizerName}
                 className={inputClass}
               />
+              <p className="mt-1 text-xs text-ink-soft/75">
+                Don&apos;t know who runs it? Leave this empty and the website&apos;s address is shown instead.
+              </p>
             </div>
             <div>
               <label htmlFor="organizerUrl" className={labelClass}>

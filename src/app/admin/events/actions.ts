@@ -14,6 +14,25 @@ import { redirect } from "next/navigation";
 import { isEventCategory } from "@/lib/events";
 import { createClient } from "@/lib/supabase/server";
 
+/** The organizer as shown on the site. Terry's ask, 2026-11-21: Charlie
+ * often knows an event's website but not who runs it, so the name may be
+ * left empty and the website's address stands in for it —
+ * "https://www.punschwald.de/stuttgart/" shows as "punschwald.de". It's
+ * saved into organizer_name (a required column), so the event cards, the
+ * Organizer filter and search all pick it up with no further changes.
+ * Returns null when there's neither a name nor a usable website. */
+function organizerLabel(name: string | null | undefined, url: string | null | undefined): string | null {
+  if (name) return name;
+  if (!url) return null;
+  try {
+    return new URL(url).hostname.replace(/^www\./, "") || null;
+  } catch {
+    return null;
+  }
+}
+
+const ORGANIZER_MISSING = "Enter the organizer's name or their website (or both).";
+
 function revalidateEventPaths() {
   revalidatePath("/admin/events");
   revalidatePath("/events");
@@ -41,11 +60,12 @@ async function uploadEventImage(
 /** Admin → Events → Add an event, with optional cover image and photos. */
 export async function createEvent(formData: FormData) {
   const title = (formData.get("title") as string | null)?.trim();
-  const organizerName = (formData.get("organizerName") as string | null)?.trim();
+  const organizerUrl = (formData.get("organizerUrl") as string | null)?.trim() || null;
+  const organizerName = organizerLabel((formData.get("organizerName") as string | null)?.trim(), organizerUrl);
   const city = (formData.get("city") as string | null)?.trim();
   const startsAtRaw = formData.get("startsAt") as string | null;
   if (!title) throw new Error("Title is required.");
-  if (!organizerName) throw new Error("Organizer name is required.");
+  if (!organizerName) throw new Error(ORGANIZER_MISSING);
   if (!city) throw new Error("City is required.");
   if (!startsAtRaw) throw new Error("Start date/time is required.");
   // Required for new events (Charlie's categories ask, 2026-11-09), so
@@ -73,7 +93,7 @@ export async function createEvent(formData: FormData) {
     title,
     description: (formData.get("description") as string | null) || null,
     organizer_name: organizerName,
-    organizer_url: (formData.get("organizerUrl") as string | null) || null,
+    organizer_url: organizerUrl,
     city,
     base: (formData.get("base") as string | null) || null,
     category,
@@ -105,13 +125,14 @@ export async function updateEvent(formData: FormData) {
   const fail = (message: string): never => redirect(`${back}?error=${encodeURIComponent(message)}`);
 
   const title = (formData.get("title") as string | null)?.trim();
-  const organizerName = (formData.get("organizerName") as string | null)?.trim();
+  const organizerUrl = (formData.get("organizerUrl") as string | null)?.trim() || null;
+  const organizerName = organizerLabel((formData.get("organizerName") as string | null)?.trim(), organizerUrl);
   const city = (formData.get("city") as string | null)?.trim();
   const startsAtRaw = formData.get("startsAt") as string | null;
   const endsAtRaw = formData.get("endsAt") as string | null;
   const category = formData.get("category");
   if (!title) fail("Title is required.");
-  if (!organizerName) fail("Organizer name is required.");
+  if (!organizerName) fail(ORGANIZER_MISSING);
   if (!city) fail("City is required.");
   if (!startsAtRaw) fail("Start date/time is required.");
   if (!isEventCategory(category)) fail("Choose a category.");
@@ -147,7 +168,7 @@ export async function updateEvent(formData: FormData) {
       title,
       description: (formData.get("description") as string | null)?.trim() || null,
       organizer_name: organizerName,
-      organizer_url: (formData.get("organizerUrl") as string | null)?.trim() || null,
+      organizer_url: organizerUrl,
       city,
       base: (formData.get("base") as string | null) || null,
       category,
