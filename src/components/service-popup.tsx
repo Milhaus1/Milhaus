@@ -32,8 +32,9 @@
 // If the browser blocks storage, it shows once per page load after 30
 // seconds rather than failing.
 //
-// For testing on localhost, add ?popup to the page address to open it
-// immediately (see the shortcut below; ignored on the live site).
+// Add ?popup to a page address to open it immediately: on localhost for
+// anyone, on the live site only for a signed-in admin (see the shortcut
+// below).
 //
 // No "Ad" label: it's Milhaus's own service on Milhaus's own site, not a
 // paid ad for someone else. Closes with the × button, the Escape key or
@@ -47,6 +48,7 @@ import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { usePathname } from "@/i18n/navigation";
 import { COOKIE_CONSENT_EVENT, getStoredConsent } from "@/lib/cookie-consent";
+import { canPreviewPopup } from "@/lib/popup-preview";
 import { SERVICE_EMAIL, SERVICE_INTERESTS, type ServiceInterest } from "@/lib/milhaus-service";
 import { sendServiceRequest, type ServiceRequestResult } from "@/lib/service-request-actions";
 
@@ -91,16 +93,25 @@ export function ServicePopup() {
   const quiet = QUIET_PATHS.some((prefix) => pathname.startsWith(prefix));
   const [result, action, pending] = useActionState<ServiceRequestResult, FormData>(sendServiceRequest, null);
 
-  // Testing shortcut (Terry's ask, 2026-11-11): on localhost only
-  // (`npm run dev`), adding ?popup to any page address opens the pop-up
+  // Preview shortcut: adding ?popup to any page address opens the pop-up
   // straight away — no 30-second wait, no once-per-visit limit, no
-  // cookie-banner wait, even on the quiet pages. Next.js removes this
-  // branch from the live site's build, so ?popup does nothing there.
+  // cookie-banner wait, even on the quiet pages. Terry's ask, 2026-11-11,
+  // on localhost only (`npm run dev`, anyone). Since 2026-11-21 it also
+  // works on the live site for a signed-in admin, so Charlie can look at
+  // it again after his visit has already shown it (www.milhaus.de/?popup).
+  // The admin check is on the server (canPreviewPopup); for anyone else
+  // ?popup does nothing and the normal rules apply.
   useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
     if (!new URLSearchParams(window.location.search).has("popup")) return;
-    const timer = setTimeout(() => setOpen(true), 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const allowed =
+      process.env.NODE_ENV === "development" ? Promise.resolve(true) : canPreviewPopup().catch(() => false);
+    allowed.then((ok) => {
+      if (ok && !cancelled) setOpen(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [pathname]);
 
   useEffect(() => {
