@@ -109,6 +109,13 @@ export default async function AdminEventsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        {/* Edit page added 2026-11-21 — events couldn't be changed before. */}
+                        <Link
+                          href={`/admin/events/${event.id}`}
+                          className="rounded-md border border-canvas-deep px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-olive hover:text-olive-deep"
+                        >
+                          Edit
+                        </Link>
                         <form action={toggleEventActive}>
                           <input type="hidden" name="id" value={event.id} />
                           <input type="hidden" name="isActive" value={String(event.isActive)} />
