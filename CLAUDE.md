@@ -122,12 +122,12 @@ navy, red and cream. They're defined once in `src/app/globals.css`:
 --brass-deep:  #5C0C14   red hover
 ```
 
-Fonts: **Libre Baskerville** for page and section headings (`font-display`),
-**Work Sans** for everything else (`font-body`) — including all listing
-content (cards and detail pages, Charlie 2026-11-06). IBM Plex Mono
-(`font-mono`) remains for small labels outside listings. The CSS variables
-still carry their original names (`--font-zilla-slab`, `--font-ibm-plex-sans`)
-from the first design; they point at the fonts above.
+Font: **Montserrat** for the whole site (Terry, 2026-11-21), loaded once in
+`src/app/fonts.ts` and used by every root layout. The `font-display`,
+`font-body` and `font-mono` classes all point at it (in `globals.css`), so
+headings, text, listings and small labels share one font. It replaced
+Charlie's original pairing: Libre Baskerville headings, Work Sans text and
+IBM Plex Mono labels.
 
 `design-reference/milhaus-landing-mockup.html` is the original mockup — kept
 for history; the live site and Charlie's spec have moved on from it.

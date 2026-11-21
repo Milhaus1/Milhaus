@@ -121,7 +121,7 @@ export function ListingCard({
       </div>
       <div className="px-4 pb-4 pt-3.5">
         {/* Everything in a listing — cards and detail pages, every type —
-            is in the body font (Work Sans; see globals.css), including the
+            is in the body font (Montserrat since 2026-11-21; see globals.css), including the
             price, specs and the small uppercase badges that used to be
             mono (Charlie, 2026-11-06). Spelled out as font-body rather
             than inherited, so the choice is visible here. */}

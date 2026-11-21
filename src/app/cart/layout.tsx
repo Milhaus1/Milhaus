@@ -9,29 +9,10 @@
 // actually loading the page in a browser.
 
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Work_Sans, Libre_Baskerville } from "next/font/google";
+import { montserrat } from "@/app/fonts";
 import Image from "next/image";
 import Link from "next/link";
 import "../globals.css";
-
-const libreBaskerville = Libre_Baskerville({
-  subsets: ["latin"],
-  weight: ["400", "700"], // only weights Google Fonts actually serves for this family
-  style: ["normal", "italic"],
-  variable: "--font-zilla-slab",
-});
-
-const workSans = Work_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-ibm-plex-sans",
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-ibm-plex-mono",
-});
 
 export const metadata: Metadata = {
   title: "Milhaus",
@@ -42,7 +23,7 @@ export default function CartLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${libreBaskerville.variable} ${workSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      className={`${montserrat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col font-body">

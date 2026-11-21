@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — from Charlie's exact color/font spec
+ * Design tokens — colors from Charlie's spec (fonts: see --font-* below)
  * (Milaus_Layout-Frontpage.pdf, 2026-10-08): creme #F8F7F2, red #7B101A,
  * blue #101842. Keep this file and tailwind usage in sync; this is the
  * single source of truth for the Tailwind theme. --ink-soft/olive/
@@ -41,10 +41,13 @@
   --color-charcoal: var(--charcoal);
   --color-paper: var(--paper);
 
-  /* next/font sets these variables on <html> in layout.tsx */
-  --font-display: var(--font-zilla-slab), Georgia, serif;
-  --font-body: var(--font-ibm-plex-sans), -apple-system, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), monospace;
+  /* One font for the whole site since 2026-11-21 (Terry's ask):
+     Montserrat, loaded in src/app/fonts.ts and set on <html> by every
+     root layout. The three names stay so existing font-display /
+     font-body / font-mono classes keep working without page edits. */
+  --font-display: var(--font-montserrat), -apple-system, sans-serif;
+  --font-body: var(--font-montserrat), -apple-system, sans-serif;
+  --font-mono: var(--font-montserrat), -apple-system, sans-serif;
 }
 
 body {
