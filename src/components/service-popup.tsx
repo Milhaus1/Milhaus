@@ -176,18 +176,23 @@ export function ServicePopup() {
         {/* Charlie's own "Milhaus Service" artwork (sent 2026-11-11), in
             place of the logo + script font first rebuilt from the blurry
             photo. It arrived as a JPG on black — the black was lost
-            transparency — so public/brand/milhaus-service-logo.png is that
-            file with the black made transparent. Terry, same day: the whole
-            pop-up should match the artwork, so it's black like the
+            transparency — so public/brand/milhaus-service-logo.png (removed
+            2026-11-21, see below) was that file with the black made
+            transparent. Terry, same day: the whole pop-up should match the artwork, so it's black like the
             artwork's background, with light text and the artwork's script
             red (#D8383C) as the accent (it was first cream, from the photo).
-            If Charlie sends a transparent PNG or SVG, replace that file. */}
+            2026-11-21: new artwork from Terry — navy MILHAUS and red
+            "Service" on a cream rounded panel. It sits on the black pop-up
+            as a cream badge: public/brand/milhaus-service-badge.png is that
+            image cropped to the panel, with the white around its rounded
+            corners made transparent. (New file name so browsers don't keep
+            showing the old logo from their cache.) */}
         <div className="mb-4 mr-8 mt-1">
           <Image
-            src="/brand/milhaus-service-logo.png"
+            src="/brand/milhaus-service-badge.png"
             alt="Milhaus Service"
-            width={877}
-            height={261}
+            width={1342}
+            height={438}
             className="h-auto w-full"
           />
         </div>
@@ -208,21 +213,24 @@ export function ServicePopup() {
             <p className="text-sm text-canvas/80">{t("sentBody")}</p>
           </div>
         ) : (
-          <form action={action} className="rounded-xl bg-white/[0.06] p-4 ring-1 ring-white/10 sm:p-5">
+          <form action={action} className="rounded-xl bg-white/[0.06] p-3 ring-1 ring-white/10 sm:p-5">
             <fieldset>
               <legend className="mb-3 font-mono text-[0.66rem] font-semibold uppercase tracking-wider text-canvas/80">
                 {t("helpLegend")} <span className="font-normal text-canvas/50">{t("selectAny")}</span>
               </legend>
-              <div className="mb-4 grid grid-cols-2 gap-2">
+              <div className="mb-4 grid grid-cols-2 gap-1.5 sm:gap-2">
                 {SERVICE_INTERESTS.map((interest) => (
                   <label
                     key={interest}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-2.5 text-[0.8rem] font-medium text-canvas hover:border-white/30 has-[:checked]:border-[#D8383C] has-[:checked]:bg-[#D8383C]/15 sm:text-[0.85rem]"
+                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/15 bg-white/[0.04] px-2 py-2.5 text-[0.7rem] font-medium text-canvas hover:border-white/30 has-[:checked]:border-[#D8383C] has-[:checked]:bg-[#D8383C]/15 sm:gap-2 sm:px-2.5 sm:text-[0.85rem]"
                   >
                     <input type="checkbox" name="interests" value={interest} className="h-4 w-4 flex-shrink-0 accent-[#D8383C]" />
                     <span aria-hidden="true">{INTEREST_ICONS[interest]}</span>
                     {/* min-w-0 + hyphens: long German words ("Wohnungssuche")
-                        ran out of the tile on phones. */}
+                        ran out of the tile on phones. After the switch to the
+                        wider Montserrat (2026-11-21), "Registration" and
+                        "Bureaucracy" split mid-word on a 390px phone, so the
+                        tiles are a little tighter and smaller below sm. */}
                     <span className="min-w-0 hyphens-auto break-words">{t(`interest_${interest}`)}</span>
                   </label>
                 ))}
