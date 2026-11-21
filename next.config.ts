@@ -35,6 +35,22 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
     ],
+    // Fewer image resizes on Vercel's free plan (Terry, 2026-11-21). The
+    // free plan allows 5,000 "image transformations" per 30 days; before
+    // the handover the old Milhaus project used about 3,800 a month with
+    // mostly demo content, so a busier site would run out and photos could
+    // stop loading until the 30 days roll over. Two settings cut that:
+    //  - Keep each resized photo for 31 days instead of Next.js's default
+    //    4 hours, so the same photo isn't resized again and again. Safe
+    //    because a replaced photo always gets a new address: uploads use
+    //    new file names, and profile pictures add ?v=<time>.
+    //  - 6 image widths instead of the default 16, so each photo has fewer
+    //    resized copies. 128–384 cover logos and small pictures (at 2× on
+    //    sharp screens), 640 cards on phones and 2× card grids, 1080 and
+    //    1920 the wide hero and full-width photos.
+    minimumCacheTTL: 2678400, // 31 days, in seconds
+    imageSizes: [128, 256, 384],
+    deviceSizes: [640, 1080, 1920],
   },
 };
 
