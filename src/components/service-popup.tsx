@@ -172,68 +172,69 @@ export function ServicePopup() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="service-popup-heading"
-        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-[460px] overflow-y-auto rounded-2xl bg-black p-5 text-canvas shadow-[0_24px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 sm:p-7"
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-[460px] overflow-y-auto rounded-2xl bg-[#F0EBDE] p-5 text-ink shadow-[0_24px_60px_rgba(16,24,66,0.35)] ring-1 ring-ink/10 sm:p-7"
       >
         <button
           ref={closeRef}
           type="button"
           onClick={() => setOpen(false)}
           aria-label={t("close")}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-2xl leading-none text-canvas/70 hover:bg-white/10 hover:text-canvas focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D8383C]"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-2xl leading-none text-ink/60 hover:bg-ink/10 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D8383C]"
         >
           ×
         </button>
 
-        {/* Charlie's own "Milhaus Service" artwork (sent 2026-11-11), in
-            place of the logo + script font first rebuilt from the blurry
-            photo. It arrived as a JPG on black — the black was lost
-            transparency — so public/brand/milhaus-service-logo.png (removed
-            2026-11-21, see below) was that file with the black made
-            transparent. Terry, same day: the whole pop-up should match the artwork, so it's black like the
-            artwork's background, with light text and the artwork's script
-            red (#D8383C) as the accent (it was first cream, from the photo).
-            2026-11-21: new artwork from Terry — navy MILHAUS and red
-            "Service" on a cream rounded panel. It sits on the black pop-up
-            as a cream badge: public/brand/milhaus-service-badge.png is that
-            image cropped to the panel, with the white around its rounded
-            corners made transparent. (New file name so browsers don't keep
-            showing the old logo from their cache.) */}
-        <div className="mb-4 mr-8 mt-1">
+        {/* The "Milhaus Service" artwork. History: Charlie's first artwork
+            (2026-11-11) was a JPG on black, so the pop-up was made black to
+            match it (Terry), with light text and the artwork's script red
+            (#D8383C) as the accent. 2026-11-21: new artwork from Terry —
+            navy MILHAUS and red "Service" on a cream rounded panel —
+            public/brand/milhaus-service-badge.png (new file name so browsers
+            don't show the old logo from their cache). The same day Terry
+            asked for the whole pop-up in that cream, so it uses the
+            artwork's own cream (#F0EBDE), and the badge file is just the
+            wordmark: the panel's cream and the white around it made
+            transparent, so no panel edge shows. Text is navy, the boxes are
+            lighter "paper", and the red stays the accent. */}
+        <div className="mb-5 mt-3 px-6 sm:px-8">
           <Image
             src="/brand/milhaus-service-badge.png"
             alt="Milhaus Service"
-            width={1342}
-            height={438}
-            className="h-auto w-full"
+            width={901}
+            height={286}
+            // Load at once: the pop-up only exists while it's open, so
+            // there's nothing to gain from lazy loading its one picture.
+            loading="eager"
+            className="mx-auto h-auto w-full max-w-[320px]"
           />
         </div>
 
         <h2
           id="service-popup-heading"
-          className="mb-3 text-right font-display text-[1.45rem] font-bold leading-tight text-canvas sm:text-[1.7rem]"
+          className="mb-3 text-right font-display text-[1.45rem] font-bold leading-tight text-ink sm:text-[1.7rem]"
         >
           {t("headingLine1")}
           <br />
           {t("headingLine2")}
         </h2>
-        <p className="mb-5 text-[0.9rem] leading-snug text-canvas/80">{t("intro")}</p>
+        <p className="mb-5 text-[0.9rem] leading-snug text-ink-soft">{t("intro")}</p>
 
         {result?.ok ? (
-          <div role="status" className="rounded-xl bg-white/[0.06] p-5 text-center ring-1 ring-white/10">
-            <p className="mb-1 font-display text-lg font-semibold text-canvas">{t("sentHeading")}</p>
-            <p className="text-sm text-canvas/80">{t("sentBody")}</p>
+          <div role="status" className="rounded-xl bg-paper p-5 text-center ring-1 ring-ink/10">
+            <p className="mb-1 font-display text-lg font-semibold text-ink">{t("sentHeading")}</p>
+            <p className="text-sm text-ink-soft">{t("sentBody")}</p>
           </div>
         ) : (
-          <form action={action} className="rounded-xl bg-white/[0.06] p-3 ring-1 ring-white/10 sm:p-5">
+          <form action={action} className="rounded-xl bg-paper/80 p-3 ring-1 ring-ink/10 sm:p-5">
             <fieldset>
-              <legend className="mb-3 font-mono text-[0.66rem] font-semibold uppercase tracking-wider text-canvas/80">
-                {t("helpLegend")} <span className="font-normal text-canvas/50">{t("selectAny")}</span>
+              <legend className="mb-3 font-mono text-[0.66rem] font-semibold uppercase tracking-wider text-ink-soft">
+                {t("helpLegend")} <span className="font-normal text-ink-soft/60">{t("selectAny")}</span>
               </legend>
               <div className="mb-4 grid grid-cols-2 gap-1.5 sm:gap-2">
                 {SERVICE_INTERESTS.map((interest) => (
                   <label
                     key={interest}
-                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/15 bg-white/[0.04] px-2 py-2.5 text-[0.7rem] font-medium text-canvas hover:border-white/30 has-[:checked]:border-[#D8383C] has-[:checked]:bg-[#D8383C]/15 sm:gap-2 sm:px-2.5 sm:text-[0.85rem]"
+                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-ink/15 bg-paper px-2 py-2.5 text-[0.7rem] font-medium text-ink hover:border-ink/35 has-[:checked]:border-[#D8383C] has-[:checked]:bg-[#D8383C]/10 sm:gap-2 sm:px-2.5 sm:text-[0.85rem]"
                   >
                     <input type="checkbox" name="interests" value={interest} className="h-4 w-4 flex-shrink-0 accent-[#D8383C]" />
                     <span aria-hidden="true">{INTEREST_ICONS[interest]}</span>
@@ -250,12 +251,12 @@ export function ServicePopup() {
 
             <label
               htmlFor="service-popup-email"
-              className="mb-1.5 block font-mono text-[0.66rem] font-semibold uppercase tracking-wider text-canvas/80"
+              className="mb-1.5 block font-mono text-[0.66rem] font-semibold uppercase tracking-wider text-ink-soft"
             >
               {t("emailLabel")}
             </label>
             <div className="relative mb-4">
-              <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-canvas/50">
+              <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60">
                 ✉
               </span>
               <input
@@ -266,7 +267,7 @@ export function ServicePopup() {
                 maxLength={320}
                 autoComplete="email"
                 placeholder={t("emailPlaceholder")}
-                className="w-full rounded-lg border border-white/20 bg-black py-2.5 pl-9 pr-3 text-[0.95rem] text-canvas placeholder:text-canvas/40 focus:border-[#D8383C] focus:outline-none"
+                className="w-full rounded-lg border border-ink/20 bg-paper py-2.5 pl-9 pr-3 text-[0.95rem] text-charcoal placeholder:text-charcoal/40 focus:border-[#D8383C] focus:outline-none"
               />
             </div>
             <input type="hidden" name="page" value={pathname} />
@@ -276,7 +277,7 @@ export function ServicePopup() {
             </div>
 
             {result && !result.ok && (
-              <p role="alert" className="mb-3 rounded-md bg-[#D8383C]/15 px-3 py-2 text-sm text-[#F2A5A7]">
+              <p role="alert" className="mb-3 rounded-md bg-[#D8383C]/10 px-3 py-2 text-sm text-[#A8262B]">
                 {result.error}
               </p>
             )}
@@ -288,13 +289,13 @@ export function ServicePopup() {
             >
               {pending ? t("sending") : `${t("submit")} ➤`}
             </button>
-            <p className="mt-3 text-center text-[0.72rem] text-canvas/70">
+            <p className="mt-3 text-center text-[0.72rem] text-ink-soft">
               {t("orEmail")}{" "}
-              <a href={`mailto:${SERVICE_EMAIL}`} className="font-semibold text-canvas underline">
+              <a href={`mailto:${SERVICE_EMAIL}`} className="font-semibold text-ink underline">
                 {SERVICE_EMAIL}
               </a>
             </p>
-            <p className="mt-1 text-center text-[0.68rem] text-canvas/50">{t("privacyNote")}</p>
+            <p className="mt-1 text-center text-[0.68rem] text-ink-soft/70">{t("privacyNote")}</p>
           </form>
         )}
       </div>
