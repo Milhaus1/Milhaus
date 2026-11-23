@@ -227,6 +227,14 @@ Deployed on Vercel. Configure the environment variables for Production, point
 from [vercel.json](./vercel.json). The build makes no filesystem or
 long-running-process assumptions, so it runs fully serverless.
 
+**Server region: London (`lhr1`), set in [vercel.json](./vercel.json).**
+The Supabase database is in London (`eu-west-2`), so the site's server runs
+right next to it. Until 2026-11-24 it ran in Vercel's default region,
+Washington, D.C. (`iad1`): every page a visitor in Germany opened went to
+the U.S. and then asked London for its data several times across the
+Atlantic. Terry asked for the fix for Charlie. If the database ever moves,
+move this region with it (Frankfurt is `fra1`).
+
 ## Development guidelines
 
 Everything needed to work on this codebase is in this README and in the
