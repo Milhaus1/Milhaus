@@ -53,7 +53,7 @@ export default async function PostListingPage({ searchParams }: { searchParams: 
 
   return (
     <main className="flex-1 py-14">
-      <div className="mx-auto max-w-[640px] px-8">
+      <div className="mx-auto max-w-160 px-8">
         <h1 className="mb-2 font-display text-3xl font-semibold text-ink">
           {offer === "sale" ? t("saleHeading") : offer === "temporary" ? t("temporaryHeading") : t("heading")}
         </h1>
