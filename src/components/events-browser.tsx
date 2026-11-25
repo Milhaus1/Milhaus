@@ -24,6 +24,11 @@
 // by the category Charlie picks in Admin → Events. Only categories that
 // at least one event uses are offered, so there's never an empty choice;
 // events without a category only show while no Type is ticked.
+//
+// Every day an event runs gets a dot, and clicking any of them shows it
+// (Charlie's report, 2026-11-25: a Christmas market running for weeks
+// only showed on its first day). Days are German days — see
+// src/lib/event-times.ts.
 
 "use client";
 
@@ -33,6 +38,7 @@ import { EventCard } from "@/components/event-card";
 import { FilterCheckboxList } from "@/components/filter-checkbox-list";
 import { FilterCluster } from "@/components/filter-cluster";
 import { SearchNoResultsAlert } from "@/components/search-no-results-alert";
+import { eventDays } from "@/lib/event-times";
 import { EVENT_CATEGORIES, type Event, type EventCategory } from "@/lib/events";
 import { matchesEvent } from "@/lib/search-matching";
 
@@ -155,8 +161,7 @@ export function EventsBrowser({
   const eventDatesByKey = useMemo(() => {
     const map = new Map<string, number>();
     for (const event of matchingEvents) {
-      const key = toDateKey(new Date(event.startsAt));
-      map.set(key, (map.get(key) ?? 0) + 1);
+      for (const key of eventDays(event.startsAt, event.endsAt)) map.set(key, (map.get(key) ?? 0) + 1);
     }
     return map;
   }, [matchingEvents]);
@@ -164,7 +169,7 @@ export function EventsBrowser({
   const filtered = useMemo(() => {
     const now = new Date();
     const list = matchingEvents.filter((event) =>
-      selectedDate ? toDateKey(new Date(event.startsAt)) === selectedDate : matchesWhen(event, when, now),
+      selectedDate ? eventDays(event.startsAt, event.endsAt).includes(selectedDate) : matchesWhen(event, when, now),
     );
     // Past events read newest first; everything else soonest first.
     return when === "past" && !selectedDate ? list.reverse() : list;

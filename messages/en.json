@@ -554,7 +554,8 @@
     "subhead": "What's happening nearby — hand-picked by Milhaus, with links to each organizer."
   },
   "EventCard": {
-    "noPhotoYet": "No photo yet"
+    "noPhotoYet": "No photo yet",
+    "until": "Until {date}"
   },
   "EventDetailPage": {
     "organizedBy": "Organized by",

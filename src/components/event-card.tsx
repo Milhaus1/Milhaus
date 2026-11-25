@@ -4,22 +4,30 @@
 // for a missing photo), a date badge, title, organizer, and city/base.
 // The category chip (Charlie's ask, 2026-11-09) sits top-right, opposite
 // the date, and only when the event has one.
+//
+// Dates and times are German time, and an event that runs for several
+// days shows its first and last day ("Nov 18 – Jan 6") with "Until …"
+// under the title (Charlie's report, 2026-11-25 — see
+// src/lib/event-times.ts).
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { NoPhotoPlaceholder } from "@/components/no-photo-placeholder";
+import { EVENT_TIME_ZONE, isMultiDay } from "@/lib/event-times";
 import type { Event } from "@/lib/events";
 
 const PHOTO_GRADIENT = "linear-gradient(135deg,#B9C4A3,#6B7353)";
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
-const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" });
+const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: EVENT_TIME_ZONE });
+const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: EVENT_TIME_ZONE });
 
 export function EventCard({ event }: { event: Event }) {
   const t = useTranslations("EventCard");
   const tCategory = useTranslations("EventCategories");
   const startsAt = new Date(event.startsAt);
+  const endsAt = event.endsAt ? new Date(event.endsAt) : null;
+  const multiDay = isMultiDay(event.startsAt, event.endsAt);
 
   return (
     <Link
@@ -47,6 +55,7 @@ export function EventCard({ event }: { event: Event }) {
         )}
         <span className="absolute left-2.5 top-2.5 rounded-[3px] bg-ink px-2 py-0.5 font-mono text-[0.64rem] font-semibold uppercase tracking-wider text-paper">
           {dateFormatter.format(startsAt)}
+          {multiDay && endsAt ? ` – ${dateFormatter.format(endsAt)}` : ""}
         </span>
         {event.category && (
           <span className="absolute right-2.5 top-2.5 rounded-[3px] bg-paper/95 px-2 py-0.5 font-mono text-[0.64rem] font-semibold uppercase tracking-wider text-olive-deep">
@@ -57,7 +66,11 @@ export function EventCard({ event }: { event: Event }) {
 
       <div className="px-4 pb-4 pt-3.5">
         <p className="mb-1 truncate text-[0.95rem] font-medium text-charcoal">{event.title}</p>
-        <p className="mb-2 text-[0.86rem] text-ink-soft">{timeFormatter.format(startsAt)}</p>
+        <p className="mb-2 text-[0.86rem] text-ink-soft">
+          {multiDay && endsAt
+            ? t("until", { date: dateFormatter.format(endsAt) })
+            : `${timeFormatter.format(startsAt)}${endsAt ? ` – ${timeFormatter.format(endsAt)}` : ""}`}
+        </p>
         <div className="flex flex-wrap gap-3 text-[0.76rem] text-charcoal/80">
           <span>{event.organizerName}</span>
           <span>

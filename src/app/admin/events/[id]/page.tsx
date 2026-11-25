@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { updateEvent } from "@/app/admin/events/actions";
+import { EventTimeFields } from "@/app/admin/events/event-time-fields";
 import { BASE_NAMES } from "@/lib/bases";
 import { EVENT_CATEGORIES, EVENT_CATEGORY_ADMIN_LABELS } from "@/lib/events";
 import { getEvent } from "@/lib/events-queries";
@@ -26,12 +27,6 @@ const inputClass =
   "w-full rounded-md border border-canvas-deep bg-paper px-3 py-2 text-[0.95rem] text-charcoal placeholder:text-charcoal/40 focus:border-olive focus:outline-none";
 const fileClass =
   "w-full text-sm text-ink-soft file:mr-3 file:rounded-md file:border-0 file:bg-canvas-deep file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink";
-
-/** A stored time back into the date/time box — "YYYY-MM-DDTHH:mm", read as
- * UTC to match how it was saved (see updateEvent). */
-function toInputValue(iso: string | null): string {
-  return iso ? new Date(iso).toISOString().slice(0, 16) : "";
-}
 
 export default async function AdminEditEventPage({
   params,
@@ -173,33 +168,7 @@ export default async function AdminEditEventPage({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="startsAt" className={labelClass}>
-                Starts
-              </label>
-              <input
-                id="startsAt"
-                name="startsAt"
-                type="datetime-local"
-                required
-                defaultValue={toInputValue(event.startsAt)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="endsAt" className={labelClass}>
-                Ends (optional)
-              </label>
-              <input
-                id="endsAt"
-                name="endsAt"
-                type="datetime-local"
-                defaultValue={toInputValue(event.endsAt)}
-                className={inputClass}
-              />
-            </div>
-          </div>
+          <EventTimeFields startsAt={event.startsAt} endsAt={event.endsAt} />
 
           <div>
             <label htmlFor="coverImage" className={labelClass}>

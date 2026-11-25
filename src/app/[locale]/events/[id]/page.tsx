@@ -10,18 +10,23 @@ import { LightboxTrigger } from "@/components/photo-lightbox";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { EVENT_TIME_ZONE, isMultiDay } from "@/lib/event-times";
 import { getEvent } from "@/lib/events-queries";
 import { SITE_URL } from "@/lib/site-url";
 
 const COVER_GRADIENT = "linear-gradient(135deg,#B9C4A3,#6B7353)";
 
+// Always German time, wherever the server or the visitor is (Charlie's
+// report, 2026-11-25 — see src/lib/event-times.ts).
 const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
   month: "long",
   day: "numeric",
   hour: "numeric",
   minute: "2-digit",
+  timeZone: EVENT_TIME_ZONE,
 });
+const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: EVENT_TIME_ZONE });
 
 type Params = Promise<{ id: string }>;
 
@@ -126,7 +131,10 @@ export default async function EventDetailPage({ params }: { params: Params }) {
 
         <p className="mt-2 font-semibold text-ink">
           {dateTimeFormatter.format(startsAt)}
-          {endsAt ? ` – ${dateTimeFormatter.format(endsAt)}` : ""}
+          {/* A one-day event repeats only the end time: "…, 4:00 PM – 9:00 PM". */}
+          {endsAt
+            ? ` – ${(isMultiDay(event.startsAt, event.endsAt) ? dateTimeFormatter : timeFormatter).format(endsAt)}`
+            : ""}
         </p>
         <p className="mt-1 text-ink-soft">
           {event.city}

@@ -11,6 +11,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { eventMoment } from "@/lib/event-times";
 import { isEventCategory } from "@/lib/events";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,6 +33,31 @@ function organizerLabel(name: string | null | undefined, url: string | null | un
 }
 
 const ORGANIZER_MISSING = "Enter the organizer's name or their website (or both).";
+
+/** The event's start and end from the form's separate date and time boxes
+ * (2026-11-25 — see src/lib/event-times.ts for why they're separate and
+ * why times are read as German time). An end time with no end date means
+ * the same day ("4 PM to 9 PM"); an end date needs a closing time.
+ * Returns an error message for Charlie instead when something's missing. */
+function readEventTimes(formData: FormData): { startsAt: Date; endsAt: Date | null } | string {
+  const text = (name: string) => (formData.get(name) as string | null)?.trim() || null;
+  const startDate = text("startDate");
+  const startTime = text("startTime");
+  const endDate = text("endDate");
+  const endTime = text("endTime");
+  if (!startDate) return "Enter the date the event starts.";
+  if (!startTime) return "Enter the time the event starts.";
+  const startsAt = eventMoment(startDate, startTime);
+  if (!startsAt) return "The start date or time isn't a real date or time.";
+  if (endDate && !endTime) return "Enter the time the event ends on its last day.";
+  let endsAt: Date | null = null;
+  if (endTime) {
+    endsAt = eventMoment(endDate ?? startDate, endTime);
+    if (!endsAt) return "The end date or time isn't a real date or time.";
+    if (endsAt <= startsAt) return "The end has to be after the start.";
+  }
+  return { startsAt, endsAt };
+}
 
 function revalidateEventPaths() {
   revalidatePath("/admin/events");
@@ -63,11 +89,11 @@ export async function createEvent(formData: FormData) {
   const organizerUrl = (formData.get("organizerUrl") as string | null)?.trim() || null;
   const organizerName = organizerLabel((formData.get("organizerName") as string | null)?.trim(), organizerUrl);
   const city = (formData.get("city") as string | null)?.trim();
-  const startsAtRaw = formData.get("startsAt") as string | null;
+  const times = readEventTimes(formData);
   if (!title) throw new Error("Title is required.");
   if (!organizerName) throw new Error(ORGANIZER_MISSING);
   if (!city) throw new Error("City is required.");
-  if (!startsAtRaw) throw new Error("Start date/time is required.");
+  if (typeof times === "string") throw new Error(times);
   // Required for new events (Charlie's categories ask, 2026-11-09), so
   // every new event shows up under one of the /events "Type" filters.
   const category = formData.get("category");
@@ -86,8 +112,6 @@ export async function createEvent(formData: FormData) {
     if (url) photos.push(url);
   }
 
-  const endsAtRaw = formData.get("endsAt") as string | null;
-
   const { error } = await supabase.from("events").insert({
     id: eventId,
     title,
@@ -97,8 +121,8 @@ export async function createEvent(formData: FormData) {
     city,
     base: (formData.get("base") as string | null) || null,
     category,
-    starts_at: new Date(startsAtRaw).toISOString(),
-    ends_at: endsAtRaw ? new Date(endsAtRaw).toISOString() : null,
+    starts_at: times.startsAt.toISOString(),
+    ends_at: times.endsAt ? times.endsAt.toISOString() : null,
     cover_image_url: coverImageUrl,
     photos,
   });
@@ -115,10 +139,9 @@ export async function createEvent(formData: FormData) {
  * are only dropped from the event; the files stay in storage (the events
  * storage policy is insert-only, and an orphaned picture costs nothing).
  *
- * Times: the form's date/time is stored as typed and shown back as typed,
- * with no timezone conversion — the same as createEvent on Vercel, whose
- * servers run on UTC. Parsed here as UTC explicitly, so an edit saved from
- * any server keeps the event at the time Charlie entered. */
+ * Times: read as German time by readEventTimes, the same as createEvent
+ * (until 2026-11-25 they were stored "as typed" in UTC — see
+ * src/lib/event-times.ts for why that changed). */
 export async function updateEvent(formData: FormData) {
   const id = formData.get("id") as string;
   const back = `/admin/events/${id}`;
@@ -128,17 +151,14 @@ export async function updateEvent(formData: FormData) {
   const organizerUrl = (formData.get("organizerUrl") as string | null)?.trim() || null;
   const organizerName = organizerLabel((formData.get("organizerName") as string | null)?.trim(), organizerUrl);
   const city = (formData.get("city") as string | null)?.trim();
-  const startsAtRaw = formData.get("startsAt") as string | null;
-  const endsAtRaw = formData.get("endsAt") as string | null;
+  const times = readEventTimes(formData);
   const category = formData.get("category");
   if (!title) fail("Title is required.");
   if (!organizerName) fail(ORGANIZER_MISSING);
   if (!city) fail("City is required.");
-  if (!startsAtRaw) fail("Start date/time is required.");
+  if (typeof times === "string") fail(times as string);
   if (!isEventCategory(category)) fail("Choose a category.");
-  const startsAt = new Date(`${startsAtRaw}Z`);
-  const endsAt = endsAtRaw ? new Date(`${endsAtRaw}Z`) : null;
-  if (endsAt && endsAt < startsAt) fail("The end can't be before the start.");
+  const { startsAt, endsAt } = times as { startsAt: Date; endsAt: Date | null };
 
   const supabase = await createClient();
   const { data: current } = await supabase.from("events").select("photos, cover_image_url").eq("id", id).maybeSingle();

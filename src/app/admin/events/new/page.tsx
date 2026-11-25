@@ -11,6 +11,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createEvent } from "@/app/admin/events/actions";
+import { EventTimeFields } from "@/app/admin/events/event-time-fields";
 import { BASE_NAMES } from "@/lib/bases";
 import { EVENT_CATEGORIES, EVENT_CATEGORY_ADMIN_LABELS } from "@/lib/events";
 import { isAdminRole } from "@/lib/roles";
@@ -123,20 +124,7 @@ export default async function AdminNewEventPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="startsAt" className={labelClass}>
-                Starts
-              </label>
-              <input id="startsAt" name="startsAt" type="datetime-local" required className={inputClass} />
-            </div>
-            <div>
-              <label htmlFor="endsAt" className={labelClass}>
-                Ends (optional)
-              </label>
-              <input id="endsAt" name="endsAt" type="datetime-local" className={inputClass} />
-            </div>
-          </div>
+          <EventTimeFields />
 
           <div>
             <label htmlFor="coverImage" className={labelClass}>

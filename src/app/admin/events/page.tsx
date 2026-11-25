@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import { deleteEvent, setEventCategory, toggleEventActive } from "@/app/admin/events/actions";
 import { EventCategoryForm } from "@/components/event-category-form";
 import { getAllEvents } from "@/lib/events-queries";
+import { EVENT_TIME_ZONE } from "@/lib/event-times";
 import { isAdminRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,9 +26,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// German time, like every other place an event's time shows (see
+// src/lib/event-times.ts).
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
   timeStyle: "short",
+  timeZone: EVENT_TIME_ZONE,
 });
 
 export default async function AdminEventsPage() {
