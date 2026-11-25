@@ -70,6 +70,12 @@ may hire someone else to change it.
   'sale'` — they share every home feature. They never show "Pet friendly" or
   "Available to" (anyone can buy a house). Homes for rent may be "US Military
   only" or "US Military & Expats".
+- **Temporary living** (2026-11-25) is the third Homes tab: `offer_type =
+  'temporary'`, furnished short stays priced **per night** (still stored in
+  `price_eur_month`), with `max_guests` / `min_nights`, its own posting price
+  and a Guests filter. Built for the many temporary-living companies near the
+  bases; "Copy" on My Listings starts a new home from an existing one. Never
+  label these "TLA approved" (rule 1).
 - **Card highlights:** a lister stars up to **3** features / what's-nearby
   items, and only as many as fit one line on the narrowest card. The form
   enforces it; cards never show half a label.

@@ -42,11 +42,14 @@ import type { Listing, ListingType } from "@/lib/types";
 
 type SearchParams = Promise<{ q?: string; category?: string; base?: string }>;
 
-// rental_sale is the homepage's "Homes for Sale" option — the For sale
-// half of the Homes page, not a listing type of its own.
-const CATEGORY_REDIRECT_PATHS: Partial<Record<ListingType | "rental_sale", string>> = {
+// rental_sale is the homepage's "Homes for Sale" option and
+// rental_temporary its "Temporary living" (2026-11-25) — tabs of the
+// Homes page, not listing types of their own.
+type SearchCategory = ListingType | "rental_sale" | "rental_temporary";
+const CATEGORY_REDIRECT_PATHS: Partial<Record<SearchCategory, string>> = {
   rental: "/listings",
   rental_sale: "/listings?for=sale",
+  rental_temporary: "/listings?for=temporary",
   car: "/cars",
   service: "/services",
 };
@@ -63,7 +66,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   const locale = await getLocale();
   const query = buildQueryString(q, base);
 
-  const redirectPath = category ? CATEGORY_REDIRECT_PATHS[category as ListingType | "rental_sale"] : undefined;
+  const redirectPath = category ? CATEGORY_REDIRECT_PATHS[category as SearchCategory] : undefined;
   if (redirectPath) {
     redirect({ href: withQuery(redirectPath, query), locale });
   }
@@ -101,6 +104,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   const counts = [
     { path: "/listings", count: countListings(rentals.filter((home) => home.offerType === "rent")) },
     { path: "/listings?for=sale", count: countListings(rentals.filter((home) => home.offerType === "sale")) },
+    { path: "/listings?for=temporary", count: countListings(rentals.filter((home) => home.offerType === "temporary")) },
     { path: "/cars", count: countListings(cars) },
     { path: "/services", count: countListings(services) + businessCount },
     { path: "/events", count: eventCount },

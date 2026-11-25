@@ -21,8 +21,10 @@ families move to and from Germany. Housing, cars and trusted local services
 are scattered across Facebook groups and classified boards. Milhaus brings
 them together in one clean, trustworthy, searchable site:
 
-- **Homes** — for rent and for sale, posted by landlords and by families
-  moving out, filterable by base, price, size, features and eligibility.
+- **Homes** — for rent, for sale and temporary living (furnished short
+  stays priced per night), posted by landlords, temporary-living companies
+  and families moving out, filterable by base, price, size, guests,
+  features and eligibility.
 - **Cars** — including U.S.-spec vehicles sold before a move.
 - **Services** — a directory of military-friendly local businesses.
 - **Special Offers** — promotions from local businesses.
@@ -145,7 +147,7 @@ scripts/                       Sample-data and setup scripts
 ### Data model
 
 - **`listings`** — every listing type (`rental` homes, `car`, `service`,
-  `product`), with homes split into `offer_type` rent | sale, a status
+  `product`), with homes split into `offer_type` rent | sale | temporary, a status
   lifecycle (`draft` → `active` → `rented` / `expired` / `archived`) and a
   30-day `expires_at`. Type-specific fields live in `rental_details`,
   `car_details`, `service_details` and `product_details`.

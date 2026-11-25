@@ -62,6 +62,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: { languages: withLanguageAlternates("/listings?for=sale") },
     },
     {
+      url: `${SITE_URL}/listings?for=temporary`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+      alternates: { languages: withLanguageAlternates("/listings?for=temporary") },
+    },
+    {
       url: `${SITE_URL}/cars`,
       lastModified: new Date(),
       changeFrequency: "daily",

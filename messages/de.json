@@ -139,7 +139,8 @@
     "placeholderBusinessCta": "Unternehmen eintragen",
     "placeholderOfferHeading": "Ihr Angebot könnte hier stehen",
     "placeholderOfferBody": "Präsentieren Sie Ihre Aktion der amerikanischen Community in Deutschland.",
-    "placeholderOfferCta": "Werben Sie bei uns"
+    "placeholderOfferCta": "Werben Sie bei uns",
+    "heroCategoryTemporary": "Wohnen auf Zeit"
   },
   "ListingsGrid": {
     "heading": "Gerade verfügbar",
@@ -160,7 +161,10 @@
     "placeholder3Heading": "Mehrere Wohnungen zu vermieten?",
     "placeholder3Body": "Wir richten Ihre Angebote direkt für Sie ein.",
     "placeholder3Cta": "Kontakt aufnehmen",
-    "searchPlaceholder": "Suche nach Stadt oder Adresse…"
+    "searchPlaceholder": "Suche nach Stadt oder Adresse…",
+    "filterGuests": "Gäste",
+    "anyGuests": "Beliebig viele",
+    "emptyGuests": "für {count}+ Gäste"
   },
   "ListingCard": {
     "perMonth": "/ Monat",
@@ -176,7 +180,10 @@
     "forRentBadge": "Zur Miete",
     "forSaleBadge": "Zu verkaufen",
     "sold": "Verkauft",
-    "featuredBadge": "Empfohlen"
+    "featuredBadge": "Empfohlen",
+    "temporaryBadge": "Auf Zeit",
+    "perNight": "/ Nacht",
+    "sleeps": "Für {count} Gäste"
   },
   "ListingForm": {
     "title": "Titel",
@@ -302,7 +309,10 @@
     "highlightOnCard": "{item} auf der Karte zeigen",
     "highlightsFull": "Das passt nicht mehr — die Zeile auf Ihrer Karte ist schon voll. Entfernen Sie eine Markierung, um stattdessen diese zu wählen.",
     "highlightsMax": "Sie können bis zu {max} hervorheben — entfernen Sie eine Markierung, um stattdessen diese zu wählen.",
-    "newCarHint": "Händler, die ein Neufahrzeug anbieten: Bitte Kraftstoff-/Energieverbrauch und CO₂-Emissionen in der Beschreibung angeben (Pkw-EnVKV). Für Gebrauchtwagen nicht erforderlich."
+    "newCarHint": "Händler, die ein Neufahrzeug anbieten: Bitte Kraftstoff-/Energieverbrauch und CO₂-Emissionen in der Beschreibung angeben (Pkw-EnVKV). Für Gebrauchtwagen nicht erforderlich.",
+    "pricePerNight": "€ / Nacht",
+    "maxGuests": "Schlafplätze (Gäste)",
+    "minNights": "Mindestaufenthalt (Nächte, optional)"
   },
   "ListingDetail": {
     "backToListings": "← Zurück zu den Angeboten",
@@ -342,13 +352,19 @@
     "availableToMilitaryOnly": "Nur US-Militär",
     "availableToMilitaryAndExpats": "US-Militär & Expats",
     "sold": "Verkauft",
-    "forSale": "Zu verkaufen"
+    "forSale": "Zu verkaufen",
+    "perNight": "/ Nacht",
+    "sleeps": "Für {count} Gäste",
+    "minNights": "Mindestens {count, plural, =1 {1 Nacht} other {# Nächte}}"
   },
   "PostPage": {
     "heading": "Zuhause inserieren",
     "body": "Ein paar Details und einige Fotos — es geht sofort live (oder sobald die Zahlung eingegangen ist, falls für diese Kategorie derzeit eine Gebühr anfällt).",
     "saleHeading": "Immobilie verkaufen",
-    "saleBody": "Ein paar Details und einige Fotos — es geht sofort live (oder sobald die Zahlung eingegangen ist, falls für den Verkauf einer Immobilie derzeit eine Gebühr anfällt)."
+    "saleBody": "Ein paar Details und einige Fotos — es geht sofort live (oder sobald die Zahlung eingegangen ist, falls für den Verkauf einer Immobilie derzeit eine Gebühr anfällt).",
+    "temporaryHeading": "Wohnen auf Zeit anbieten",
+    "temporaryBody": "Eine möblierte Unterkunft für kurze Zeit, mit Preis pro Nacht. Ein paar Details und einige Fotos — sie geht sofort live (oder sobald die Zahlung eingegangen ist, falls für diese Kategorie derzeit eine Gebühr anfällt).",
+    "copyNote": "Die Angaben von „{title}“ sind unten bereits ausgefüllt. Ändern Sie, was anders ist, und fügen Sie die eigenen Fotos dieser Unterkunft hinzu."
   },
   "SignIn": {
     "heading": "Anmelden",
@@ -655,7 +671,9 @@
     "businessLive": "Online",
     "businessWaitingConsent": "Wartet darauf, dass das Unternehmen unsere E-Mail bestätigt",
     "businessWaitingPayment": "Wartet auf Zahlung",
-    "businessHidden": "Nicht auf der Website sichtbar"
+    "businessHidden": "Nicht auf der Website sichtbar",
+    "perNight": "/Nacht",
+    "copy": "Kopieren"
   },
   "ReportListing": {
     "button": "Anzeige melden",
@@ -680,7 +698,9 @@
     "saleHeading": "Eine Immobilie zum Kauf",
     "saleBody": "Verkaufen Sie ein Haus oder eine Wohnung, die Ihnen gehört.",
     "individualNote": "Wohnungen, Häuser und Autos sind für dich kostenlos, weil du in deinem Profil angegeben hast, dass du privat inserierst. Gewerbliche Anbieter zahlen den normalen Preis. <link>In „Meine Anzeigen“ ändern</link>.",
-    "freeDaysLeft": "{moreDays, plural, =0 {nur noch heute} =1 {noch <num>1</num> Tag} other {noch <num>#</num> Tage}}"
+    "freeDaysLeft": "{moreDays, plural, =0 {nur noch heute} =1 {noch <num>1</num> Tag} other {noch <num>#</num> Tage}}",
+    "temporaryHeading": "Wohnen auf Zeit",
+    "temporaryBody": "Möblierte Unterkünfte für kurze Zeit, mit Preis pro Nacht."
   },
   "ListingsPage": {
     "metaTitle": "Wohnungen zur Miete",
@@ -688,14 +708,20 @@
     "heading": "Wohnungen zur Miete",
     "subhead": "Wohnungen von Vermietern und ausziehenden Familien, geprüft bevor sie live gehen.",
     "postAHome": "Wohnung inserieren",
-    "tabsLabel": "Wohnungen zur Miete oder zum Kauf",
+    "tabsLabel": "Wohnungen zur Miete, zum Kauf oder auf Zeit",
     "tabRent": "Zur Miete",
     "tabSale": "Zum Kauf",
     "saleHeading": "Immobilien zum Kauf",
     "saleSubhead": "Häuser und Wohnungen zum Kauf nahe US-Stützpunkten in Deutschland, von den Eigentümern inseriert.",
     "saleMetaTitle": "Immobilien zum Kauf",
     "saleMetaDescription": "Häuser und Wohnungen zum Kauf nahe US-Stützpunkten in Deutschland, von den Eigentümern inseriert — am Tag des Verkaufs entfernt.",
-    "postAHomeForSale": "Immobilie verkaufen"
+    "postAHomeForSale": "Immobilie verkaufen",
+    "tabTemporary": "Auf Zeit",
+    "temporaryHeading": "Wohnen auf Zeit",
+    "temporarySubhead": "Möblierte Unterkünfte für ein paar Nächte oder Monate nahe US-Stützpunkten – für die Zeit nach der Ankunft oder vor dem Umzug.",
+    "temporaryMetaTitle": "Wohnen auf Zeit nahe US-Stützpunkten",
+    "temporaryMetaDescription": "Möblierte Unterkünfte auf Zeit nahe US-Stützpunkten in Deutschland, mit Preis pro Nacht – für Familien bei der Ankunft oder vor dem Umzug (PCS).",
+    "postTemporary": "Unterkunft auf Zeit anbieten"
   },
   "PostBusinessPage": {
     "heading": "Ihr Unternehmen eintragen",

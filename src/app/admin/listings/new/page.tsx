@@ -23,9 +23,10 @@ export const metadata: Metadata = {
 
 const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" });
 
-const TYPE_LABELS: Record<ListingType | "rental_sale", string> = {
+const TYPE_LABELS: Record<ListingType | "rental_sale" | "rental_temporary", string> = {
   rental: "Home for rent",
   rental_sale: "Home for sale",
+  rental_temporary: "Temporary living",
   car: "Car",
   product: "Item for sale",
   service: "Service",
@@ -52,6 +53,8 @@ export default async function AdminNewListingPage({
   const isProduct = type === "product";
   const isService = type === "service";
   const isSale = type === "sale";
+  // Temporary living (2026-11-25): a home priced per night.
+  const isTemporary = type === "temporary";
   const kind = isCar ? "car" : isProduct ? "product" : isService ? "service" : "rental";
   const prices = await getListingPrices();
 
@@ -62,7 +65,7 @@ export default async function AdminNewListingPage({
           ← Back to admin
         </Link>
         <h1 className="mb-2 font-display text-3xl font-semibold text-ink">
-          Add a {isCar ? "car ad" : isProduct ? "item for sale" : isService ? "service" : isSale ? "home for sale" : "home for rent"}
+          Add a {isCar ? "car ad" : isProduct ? "item for sale" : isService ? "service" : isSale ? "home for sale" : isTemporary ? "temporary living home" : "home for rent"}
         </h1>
         <p className="mb-4 text-ink-soft">
           Goes live immediately — no review step, since you&apos;re the reviewer.
@@ -71,7 +74,7 @@ export default async function AdminNewListingPage({
           <Link
             href="/admin/listings/new"
             className={`rounded-md border px-3.5 py-1.5 ${
-              kind === "rental" && !isSale ? "border-olive bg-olive/15 text-olive-deep" : "border-canvas-deep text-ink-soft"
+              kind === "rental" && !isSale && !isTemporary ? "border-olive bg-olive/15 text-olive-deep" : "border-canvas-deep text-ink-soft"
             }`}
           >
             Home for rent
@@ -83,6 +86,14 @@ export default async function AdminNewListingPage({
             }`}
           >
             Home for sale
+          </Link>
+          <Link
+            href="/admin/listings/new?type=temporary"
+            className={`rounded-md border px-3.5 py-1.5 ${
+              isTemporary ? "border-olive bg-olive/15 text-olive-deep" : "border-canvas-deep text-ink-soft"
+            }`}
+          >
+            Temporary living
           </Link>
           <Link
             href="/admin/listings/new?type=car"
@@ -118,10 +129,10 @@ export default async function AdminNewListingPage({
           <span className="font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft/75">
             Posting prices
           </span>
-          {(Object.keys(TYPE_LABELS) as (ListingType | "rental_sale")[]).map((t) => (
+          {(Object.keys(TYPE_LABELS) as (ListingType | "rental_sale" | "rental_temporary")[]).map((t) => (
             <span
               key={t}
-              className={t === (isSale ? "rental_sale" : kind) ? "font-semibold text-ink" : "text-ink-soft"}
+              className={t === (isSale ? "rental_sale" : isTemporary ? "rental_temporary" : kind) ? "font-semibold text-ink" : "text-ink-soft"}
             >
               {TYPE_LABELS[t]}: {currencyFormatter.format(prices[t])}
             </span>
@@ -131,7 +142,7 @@ export default async function AdminNewListingPage({
           </Link>
         </div>
 
-        <ListingForm key={type ?? "rental"} variant="admin-add" kind={kind} offerType={isSale ? "sale" : "rent"} />
+        <ListingForm key={type ?? "rental"} variant="admin-add" kind={kind} offerType={isSale ? "sale" : isTemporary ? "temporary" : "rent"} />
       </div>
     </main>
   );

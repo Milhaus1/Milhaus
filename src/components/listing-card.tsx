@@ -53,6 +53,9 @@ export function ListingCard({
   const tNearby = useTranslations("NearbyAmenities");
   const isRented = listing.status === "rented";
   const isForSale = listing.offerType === "sale";
+  // Temporary living (2026-11-25): priced per night, and says how many
+  // it sleeps — the first thing a family on a PCS move checks.
+  const isTemporary = listing.offerType === "temporary";
 
   return (
     // h-full on both: a card fills its grid row, so one with feature
@@ -83,11 +86,12 @@ export function ListingCard({
             {listing.isFeatured && (
               <span className="rounded-[3px] bg-brass px-2 py-0.5 font-body text-[0.64rem] font-semibold uppercase tracking-wider text-paper">★ {t("featuredBadge")}</span>
             )}
-            {/* For rent / For sale on every home (Charlie, 2026-11-04) —
-                they sit side by side on the homepage's Featured Homes. */}
+            {/* For rent / For sale / Short stay on every home (Charlie,
+                2026-11-04; Short stay 2026-11-25) — they can sit side by
+                side on the homepage's Featured Homes. */}
             {listing.type === "rental" && (
               <span className="rounded-[3px] bg-ink px-2 py-0.5 font-body text-[0.64rem] font-semibold uppercase tracking-wider text-paper">
-                {isForSale ? t("forSaleBadge") : t("forRentBadge")}
+                {isForSale ? t("forSaleBadge") : isTemporary ? t("temporaryBadge") : t("forRentBadge")}
               </span>
             )}
             {listing.isNew && (
@@ -128,7 +132,7 @@ export function ListingCard({
         <div className="mb-1 flex items-start justify-between">
           <span className="font-body text-[1.08rem] font-semibold text-ink">
             {currencyFormatter.format(listing.priceEurMonth)}
-            {isForSale ? "" : ` ${t("perMonth")}`}
+            {isForSale ? "" : ` ${isTemporary ? t("perNight") : t("perMonth")}`}
           </span>
           <span
             className={`rounded-[3px] px-2 py-0.5 font-body text-[0.66rem] font-semibold uppercase tracking-wider ${
@@ -150,6 +154,7 @@ export function ListingCard({
           <span>{listing.bedrooms} {t("bed")}</span>
           <span>{listing.bathrooms} {t("bath")}</span>
           {listing.sizeSqm != null && <span>{listing.sizeSqm} m²</span>}
+          {isTemporary && listing.maxGuests != null && <span>{t("sleeps", { count: listing.maxGuests })}</span>}
         </div>
 
         {/* What the lister starred (features and what's nearby), else

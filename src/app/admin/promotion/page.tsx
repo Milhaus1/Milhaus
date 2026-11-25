@@ -28,6 +28,7 @@ export const metadata: Metadata = {
 const TYPE_LABELS: Record<(typeof PROMO_TYPES)[number], string> = {
   rental: "Homes for rent",
   rental_sale: "Homes for sale",
+  rental_temporary: "Temporary living",
   car: "Cars",
   business: "Business listings",
 };

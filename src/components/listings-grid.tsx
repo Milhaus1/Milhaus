@@ -12,6 +12,10 @@
 //
 // Filter state lives in the URL (?base=...&bedrooms=...) once Applied —
 // useListingFilters is the read/write logic for that "applied" layer.
+//
+// On the Temporary living tab (2026-11-25) the Specifics cluster also
+// asks how many guests, and prices are per night — the Price filter
+// compares the same number, so it just works on nightly prices there.
 
 "use client";
 
@@ -28,7 +32,7 @@ import { AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
 import { BASE_NAMES } from "@/lib/bases";
 import { firstPhotoIndices } from "@/lib/priority-indices";
 import { matchesListing } from "@/lib/search-matching";
-import type { Listing } from "@/lib/types";
+import type { Listing, OfferType } from "@/lib/types";
 import { AVAILABLE_TO_FILTER_KEYS, type AvailableToFilterKey, useListingFilters } from "@/lib/use-listing-filters";
 
 const PHOTO_GRADIENTS = [
@@ -48,11 +52,13 @@ const PHOTO_GRADIENTS = [
 // filter is active — padding a filtered, specific result set with generic
 // filler would be actively misleading ("3 listings near Ramstein" when
 // there's really 1), not just decorative.
-function PlaceholderCard({ variant, forSale }: { variant: 0 | 1 | 2; forSale: boolean }) {
+const POST_PATHS: Record<OfferType, string> = { rent: "/post", sale: "/post?for=sale", temporary: "/post?for=temporary" };
+
+function PlaceholderCard({ variant, offer }: { variant: 0 | 1 | 2; offer: OfferType }) {
   const t = useTranslations("ListingsGrid");
   const content: { heading: string; body: string; ctaLabel?: string; ctaHref?: string }[] = [
     { heading: t("placeholder1Heading"), body: t("placeholder1Body") },
-    { heading: t("placeholder2Heading"), body: t("placeholder2Body"), ctaLabel: t("placeholder2Cta"), ctaHref: forSale ? "/post?for=sale" : "/post" },
+    { heading: t("placeholder2Heading"), body: t("placeholder2Body"), ctaLabel: t("placeholder2Cta"), ctaHref: POST_PATHS[offer] },
     { heading: t("placeholder3Heading"), body: t("placeholder3Body"), ctaLabel: t("placeholder3Cta"), ctaHref: "/for-landlords" },
   ];
   const { heading, body, ctaLabel, ctaHref } = content[variant];
@@ -74,12 +80,13 @@ export function ListingsGrid({
   listings,
   favoriteIds,
   initialQuery = "",
-  forSale = false,
+  offer = "rent",
 }: {
   listings: Listing[];
-  /** The Homes page's For sale tab — only changes where "List your
-   * home" placeholder links go; the page already passes only those. */
-  forSale?: boolean;
+  /** Which Homes tab this is — the page already passes only that tab's
+   * homes. Changes where "List your home" links go, hides Available to
+   * and Pet friendly for sale, and adds Guests for temporary living. */
+  offer?: OfferType;
   /** null = signed-out visitor (no hearts at all); array (possibly
    * empty) = signed in, these listing IDs are favorited. */
   favoriteIds: string[] | null;
@@ -95,9 +102,12 @@ export function ListingsGrid({
   const tAmenities = useTranslations("Amenities");
   const tFilter = useTranslations("FilterModal");
   const locale = useLocale();
+  const forSale = offer === "sale";
+  const isTemporary = offer === "temporary";
   const {
     activeBases,
     minBedrooms,
+    minGuests,
     moveIn,
     activeAmenities,
     priceMin,
@@ -125,6 +135,7 @@ export function ListingsGrid({
   const [pendingBases, setPendingBases] = useState(activeBases);
   const [pendingAmenities, setPendingAmenities] = useState<AmenityKey[]>(activeAmenities);
   const [pendingBedrooms, setPendingBedrooms] = useState(minBedrooms);
+  const [pendingGuests, setPendingGuests] = useState(minGuests);
   const [pendingMoveIn, setPendingMoveIn] = useState(moveIn);
   const [pendingPriceMin, setPendingPriceMin] = useState(priceMin);
   const [pendingPriceMax, setPendingPriceMax] = useState(priceMax);
@@ -135,6 +146,7 @@ export function ListingsGrid({
       bases: pendingBases,
       amenities: pendingAmenities,
       minBedrooms: pendingBedrooms,
+      minGuests: pendingGuests,
       moveIn: pendingMoveIn,
       priceMin: pendingPriceMin,
       priceMax: pendingPriceMax,
@@ -147,6 +159,7 @@ export function ListingsGrid({
     setPendingBases([]);
     setPendingAmenities([]);
     setPendingBedrooms(0);
+    setPendingGuests(0);
     setPendingMoveIn("");
     setPendingPriceMin(null);
     setPendingPriceMax(null);
@@ -165,6 +178,7 @@ export function ListingsGrid({
     return listings.filter((listing) => {
       if (activeBases.length > 0 && (!listing.base || !activeBases.includes(listing.base))) return false;
       if (minBedrooms > 0 && listing.bedrooms != null && listing.bedrooms < minBedrooms) return false;
+      if (minGuests > 0 && listing.maxGuests != null && listing.maxGuests < minGuests) return false;
       // "I need to move in by this date" — a listing works if it's
       // already available, or becomes available on/before that date.
       // A listing with no availableFrom set stays in rather than getting
@@ -186,7 +200,7 @@ export function ListingsGrid({
       if (!q) return true;
       return matchesListing(listing, q);
     });
-  }, [listings, keyword, activeBases, minBedrooms, moveIn, activeAmenities, priceMin, priceMax, activeAvailableTo]);
+  }, [listings, keyword, activeBases, minBedrooms, minGuests, moveIn, activeAmenities, priceMin, priceMax, activeAvailableTo]);
 
   // Favorited listings first — a stable sort (Array.prototype.sort is
   // stable per spec) so everything else keeps its existing relative
@@ -207,6 +221,7 @@ export function ListingsGrid({
     t("emptyPrefix"),
     activeBases.length > 0 ? t("emptyNear", { base: activeBases.join(", ") }) : "",
     minBedrooms > 0 ? t("emptyBedrooms", { count: minBedrooms }) : "",
+    minGuests > 0 ? t("emptyGuests", { count: minGuests }) : "",
     moveIn
       ? t("emptyMoveIn", { date: new Date(`${moveIn}T00:00:00`).toLocaleDateString(locale, { month: "long", day: "numeric" }) })
       : "",
@@ -248,7 +263,7 @@ export function ListingsGrid({
         <FilterCluster
           label={tFilter("filterCategorySpecifics")}
           icon="🏷"
-          badge={(pendingBedrooms > 0 ? 1 : 0) + (pendingMoveIn ? 1 : 0) || undefined}
+          badge={(pendingBedrooms > 0 ? 1 : 0) + (pendingGuests > 0 ? 1 : 0) + (pendingMoveIn ? 1 : 0) || undefined}
         >
           <div className="flex flex-col gap-3">
             <div>
@@ -279,6 +294,26 @@ export function ListingsGrid({
                 <option value="3">3+</option>
               </select>
             </div>
+            {isTemporary && (
+              <div>
+                <label htmlFor="filter-guests" className="mb-1 block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft/75">
+                  {t("filterGuests")}
+                </label>
+                <select
+                  id="filter-guests"
+                  value={pendingGuests || ""}
+                  onChange={(event) => setPendingGuests(Number(event.target.value))}
+                  className="w-full rounded-md border border-canvas-deep bg-paper px-3 py-2 text-[0.95rem] text-charcoal focus:border-olive focus:outline-none"
+                >
+                  <option value="">{t("anyGuests")}</option>
+                  {[2, 3, 4, 5, 6, 8].map((count) => (
+                    <option key={count} value={count}>
+                      {count}+
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </FilterCluster>
 
@@ -349,7 +384,7 @@ export function ListingsGrid({
             />
           ))}
           {Array.from({ length: placeholderCount }).map((_, index) => (
-            <PlaceholderCard key={`placeholder-${index}`} variant={index as 0 | 1 | 2} forSale={forSale} />
+            <PlaceholderCard key={`placeholder-${index}`} variant={index as 0 | 1 | 2} offer={offer} />
           ))}
         </div>
       )}

@@ -298,6 +298,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 <option value="">{t("heroAllCategories")}</option>
                 <option value="rental">{t("heroCategoryHomesForRent")}</option>
                 <option value="rental_sale">{t("heroCategoryHomesForSale")}</option>
+                <option value="rental_temporary">{t("heroCategoryTemporary")}</option>
                 <option value="car">{t("heroCategoryCars")}</option>
                 <option value="service">{t("heroCategoryServices")}</option>
               </select>

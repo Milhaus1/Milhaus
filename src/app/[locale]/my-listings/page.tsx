@@ -230,7 +230,8 @@ export default async function MyListingsPage() {
                         </Link>
                         <p className="font-mono text-xs text-ink-soft">
                           {formatListingPrice(listing)}
-                          {listing.type === "rental" && listing.offerType === "rent" ? t("perMonth") : ""} · {listing.city} ·{" "}
+                          {listing.type === "rental" && listing.offerType === "rent" ? t("perMonth") : ""}
+                          {listing.type === "rental" && listing.offerType === "temporary" ? t("perNight") : ""} · {listing.city} ·{" "}
                           {t("viewCount", { count: listing.viewCount })}
                         </p>
                         {status === "active" && listing.expiresAt && (
@@ -242,13 +243,24 @@ export default async function MyListingsPage() {
                           <p className="text-xs text-rust">{t("expiredNote")}</p>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Link
                           href={`/edit-listing/${listing.id}`}
                           className="rounded-md border border-canvas-deep px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-olive hover:text-olive-deep"
                         >
                           {t("edit")}
                         </Link>
+                        {/* "List another like this one" — a new home with
+                            these details filled in (2026-11-25, for
+                            companies with many similar places). */}
+                        {listing.type === "rental" && (
+                          <Link
+                            href={`/post?${listing.offerType === "rent" ? "" : `for=${listing.offerType}&`}copy=${listing.id}`}
+                            className="rounded-md border border-canvas-deep px-3 py-1.5 text-xs font-semibold text-ink-soft hover:border-olive hover:text-olive-deep"
+                          >
+                            {t("copy")}
+                          </Link>
+                        )}
                         {(status === "expired" ||
                           (status === "active" &&
                             listing.expiresAt &&
@@ -272,7 +284,7 @@ export default async function MyListingsPage() {
                             >
                               {listing.type === "car" || listing.type === "product" || listing.offerType === "sale"
                                 ? t("markSold")
-                                : listing.type === "service"
+                                : listing.type === "service" || listing.offerType === "temporary"
                                   ? t("markUnavailable")
                                   : t("markRented")}
                             </button>

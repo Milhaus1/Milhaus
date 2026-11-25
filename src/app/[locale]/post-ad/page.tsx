@@ -58,7 +58,7 @@ export default async function PostAdPage() {
   const priceFor = (price: number, individualsFree: boolean) => (individualsFree && isIndividual ? 0 : price);
   const individualMakesFree =
     isIndividual &&
-    (["rental", "rental_sale", "car"] as const).some((type) => prices[type] > 0 && !promotionCovers(promo, type));
+    (["rental", "rental_sale", "rental_temporary", "car"] as const).some((type) => prices[type] > 0 && !promotionCovers(promo, type));
 
   // No "sell an item" option any more — /products became Charlie's
   // Special Offers page (promo cards, not self-listed items), so
@@ -78,6 +78,13 @@ export default async function PostAdPage() {
       body: t("saleBody"),
       priceEur: priceFor(prices.rental_sale, true),
       promoFree: promotionCovers(promo, "rental_sale"),
+    },
+    {
+      href: "/post?for=temporary",
+      heading: t("temporaryHeading"),
+      body: t("temporaryBody"),
+      priceEur: priceFor(prices.rental_temporary, true),
+      promoFree: promotionCovers(promo, "rental_temporary"),
     },
     {
       href: "/post-car",

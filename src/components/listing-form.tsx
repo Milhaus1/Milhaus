@@ -123,6 +123,14 @@ function detailsPayload(kind: Kind, formData: FormData) {
       stove_type: formData.get("stoveType") || null,
       is_new: formData.get("isNew") === "on",
       available_to: formData.get("availableTo") || null,
+      // Temporary living only — left out entirely for other homes, so
+      // saving them never depends on these columns.
+      ...(formData.has("maxGuests")
+        ? {
+            max_guests: Number(formData.get("maxGuests")) || null,
+            min_nights: formData.get("minNights") ? Number(formData.get("minNights")) : null,
+          }
+        : {}),
       // § 87 GEG energy certificate — see energy-certificate-fields.tsx.
       // An "exempt" home stores no figures, whatever was typed before
       // the lister switched to it.
@@ -150,6 +158,7 @@ export function ListingForm({
   offerType = "rent",
   priceEur = null,
   existing,
+  template,
 }: {
   variant: Variant;
   kind?: Kind;
@@ -159,6 +168,12 @@ export function ListingForm({
   /** Set on /edit-listing/[id] — pre-fills every field and saves as an
    * update instead of a new listing. */
   existing?: Listing;
+  /** "List another like this one" (2026-11-25): a listing whose details
+   * fill in a NEW listing's form — for a company with many similar flats
+   * (Terry: "many many many TLAs around all of the bases"). Unlike
+   * `existing`, nothing is edited and no photos are copied: each place
+   * needs its own pictures. */
+  template?: Listing;
   /** Set when this category currently costs something to post (see
    * getPostingPrice) — instead of submitting straight to
    * pending_review, the listing is saved as a draft and added to the
@@ -183,8 +198,11 @@ export function ListingForm({
   // Cars only — a dealer isn't tied to one base the way a rental is, so
   // this can be several (or "every location") instead of the single
   // <select> every other kind uses.
+  // What the fields start with: the listing being edited, else the one
+  // being copied, else nothing.
+  const prefill = existing ?? template;
   const [carBases, setCarBases] = useState<string[]>(
-    existing?.bases ?? (existing?.base ? [existing.base] : []),
+    prefill?.bases ?? (prefill?.base ? [prefill.base] : []),
   );
   // Edit mode only — the listing's current photos, minus any the editor
   // has clicked Remove on (Undo puts one back).
@@ -194,6 +212,9 @@ export function ListingForm({
   const isAdminAdd = variant === "admin-add";
   const isRental = kind === "rental";
   const isForSale = isRental && (existing?.offerType ?? offerType) === "sale";
+  // Temporary living (2026-11-25, see 20261125120000_add_temporary_living.sql):
+  // a rental priced per night, with guests and a minimum stay.
+  const isTemporary = isRental && (existing?.offerType ?? offerType) === "temporary";
   const isCar = kind === "car";
   const isProduct = kind === "product";
   const isService = kind === "service";
@@ -234,7 +255,7 @@ export function ListingForm({
       bases: isCar && carBases.length > 1 ? carBases : null,
       distance_to_base: formData.get("distanceToBase") || null,
       price_eur_month: Number(formData.get("priceEurMonth")),
-      offer_type: isForSale ? "sale" : "rent",
+      offer_type: isForSale ? "sale" : isTemporary ? "temporary" : "rent",
       source,
       status: "draft",
       owner_id: user.id,
@@ -502,7 +523,19 @@ export function ListingForm({
           // on the cart page.
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
             <Link
-              href={isCar ? "/post-car" : isProduct ? "/post-product" : isService ? "/post-service" : isForSale ? "/post?for=sale" : "/post"}
+              href={
+                isCar
+                  ? "/post-car"
+                  : isProduct
+                    ? "/post-product"
+                    : isService
+                      ? "/post-service"
+                      : isForSale
+                        ? "/post?for=sale"
+                        : isTemporary
+                          ? "/post?for=temporary"
+                          : "/post"
+              }
               className="text-sm font-semibold text-olive-deep hover:underline"
             >
               {isCar
@@ -537,7 +570,7 @@ export function ListingForm({
           id="title"
           name="title"
           required
-          defaultValue={existing?.title}
+          defaultValue={prefill?.title}
           placeholder={
             isCar
               ? t("carTitlePlaceholder")
@@ -559,7 +592,7 @@ export function ListingForm({
           id="description"
           name="description"
           rows={4}
-          defaultValue={existing?.description}
+          defaultValue={prefill?.description}
           placeholder={
             isCar
               ? t("carDescriptionPlaceholder")
@@ -593,7 +626,7 @@ export function ListingForm({
               min="1900"
               max="2100"
               required
-              defaultValue={existing?.year ?? undefined}
+              defaultValue={prefill?.year ?? undefined}
               className={inputClass}
             />
           </div>
@@ -601,19 +634,19 @@ export function ListingForm({
             <label htmlFor="make" className={labelClass}>
               {t("make")}
             </label>
-            <input id="make" name="make" required defaultValue={existing?.make ?? undefined} placeholder={t("makePlaceholder")} className={inputClass} />
+            <input id="make" name="make" required defaultValue={prefill?.make ?? undefined} placeholder={t("makePlaceholder")} className={inputClass} />
           </div>
           <div>
             <label htmlFor="model" className={labelClass}>
               {t("model")}
             </label>
-            <input id="model" name="model" required defaultValue={existing?.model ?? undefined} placeholder={t("modelPlaceholder")} className={inputClass} />
+            <input id="model" name="model" required defaultValue={prefill?.model ?? undefined} placeholder={t("modelPlaceholder")} className={inputClass} />
           </div>
           <div>
             <label htmlFor="bodyType" className={labelClass}>
               {t("bodyType")}
             </label>
-            <select id="bodyType" name="bodyType" className={inputClass} defaultValue={existing?.bodyType ?? ""}>
+            <select id="bodyType" name="bodyType" className={inputClass} defaultValue={prefill?.bodyType ?? ""}>
               <option value="">{t("notSpecified")}</option>
               {CAR_BODY_TYPE_KEYS.map((key) => (
                 <option key={key} value={key}>
@@ -631,7 +664,7 @@ export function ListingForm({
               name="mileageKm"
               type="number"
               min="0"
-              defaultValue={existing?.mileageKm ?? undefined}
+              defaultValue={prefill?.mileageKm ?? undefined}
               className={inputClass}
             />
           </div>
@@ -639,7 +672,7 @@ export function ListingForm({
             <label htmlFor="transmission" className={labelClass}>
               {t("transmission")}
             </label>
-            <select id="transmission" name="transmission" className={inputClass} defaultValue={existing?.transmission ?? ""}>
+            <select id="transmission" name="transmission" className={inputClass} defaultValue={prefill?.transmission ?? ""}>
               <option value="">{t("notSpecified")}</option>
               <option value="automatic">{t("transmissionAutomatic")}</option>
               <option value="manual">{t("transmissionManual")}</option>
@@ -653,7 +686,7 @@ export function ListingForm({
               id="usSpec"
               name="usSpec"
               className={inputClass}
-              defaultValue={existing?.usSpec == null ? "" : existing.usSpec ? "yes" : "no"}
+              defaultValue={prefill?.usSpec == null ? "" : prefill.usSpec ? "yes" : "no"}
             >
               <option value="">{t("notSpecified")}</option>
               <option value="yes">{t("usSpecYes")}</option>
@@ -666,7 +699,7 @@ export function ListingForm({
 
       {isCar && (
         <label className="flex items-center gap-2 text-sm text-charcoal">
-          <input type="checkbox" name="lowMileage" defaultChecked={existing?.lowMileage} className="h-4 w-4 rounded border-canvas-deep text-olive focus:ring-olive" />
+          <input type="checkbox" name="lowMileage" defaultChecked={prefill?.lowMileage} className="h-4 w-4 rounded border-canvas-deep text-olive focus:ring-olive" />
           <span>{t("lowMileageLabel")}</span>
         </label>
       )}
@@ -684,7 +717,7 @@ export function ListingForm({
               name="productCategory"
               required
               className={inputClass}
-              defaultValue={existing?.productCategory ?? ""}
+              defaultValue={prefill?.productCategory ?? ""}
             >
               <option value="" disabled>
                 {t("chooseOne")}
@@ -700,7 +733,7 @@ export function ListingForm({
             <label htmlFor="condition" className={labelClass}>
               {t("condition")}
             </label>
-            <select id="condition" name="condition" required className={inputClass} defaultValue={existing?.condition ?? ""}>
+            <select id="condition" name="condition" required className={inputClass} defaultValue={prefill?.condition ?? ""}>
               <option value="" disabled>
                 {t("chooseOne")}
               </option>
@@ -727,7 +760,7 @@ export function ListingForm({
               name="serviceCategory"
               required
               className={inputClass}
-              defaultValue={existing?.serviceCategory ?? ""}
+              defaultValue={prefill?.serviceCategory ?? ""}
             >
               <option value="" disabled>
                 {t("chooseOne")}
@@ -750,13 +783,13 @@ export function ListingForm({
             <label htmlFor="address" className={labelClass}>
               {t("address")}
             </label>
-            <input id="address" name="address" required defaultValue={existing?.address ?? undefined} className={inputClass} />
+            <input id="address" name="address" required defaultValue={prefill?.address ?? undefined} className={inputClass} />
           </div>
           <div>
             <label htmlFor="city" className={labelClass}>
               {t("city")}
             </label>
-            <input id="city" name="city" required defaultValue={existing?.city} className={inputClass} />
+            <input id="city" name="city" required defaultValue={prefill?.city} className={inputClass} />
           </div>
         </div>
       )}
@@ -766,7 +799,7 @@ export function ListingForm({
           <label htmlFor="city" className={labelClass}>
             {t("city")}
           </label>
-          <input id="city" name="city" required defaultValue={existing?.city} className={inputClass} />
+          <input id="city" name="city" required defaultValue={prefill?.city} className={inputClass} />
         </div>
       )}
 
@@ -779,7 +812,7 @@ export function ListingForm({
             <input
               id="distanceToBase"
               name="distanceToBase"
-              defaultValue={existing?.distanceToBase ?? undefined}
+              defaultValue={prefill?.distanceToBase ?? undefined}
               placeholder={t("distanceToBasePlaceholder")}
               className={inputClass}
             />
@@ -819,7 +852,7 @@ export function ListingForm({
             <label htmlFor="base" className={labelClass}>
               {t("nearestBase")}
             </label>
-            <select id="base" name="base" className={inputClass} defaultValue={existing?.base ?? ""}>
+            <select id="base" name="base" className={inputClass} defaultValue={prefill?.base ?? ""}>
               <option value="" disabled>
                 {t("chooseOne")}
               </option>
@@ -837,7 +870,7 @@ export function ListingForm({
             <input
               id="distanceToBase"
               name="distanceToBase"
-              defaultValue={existing?.distanceToBase ?? undefined}
+              defaultValue={prefill?.distanceToBase ?? undefined}
               placeholder={t("distanceToBasePlaceholder")}
               className={inputClass}
             />
@@ -858,7 +891,7 @@ export function ListingForm({
             type="number"
             min="0"
             required
-            defaultValue={existing?.priceEurMonth}
+            defaultValue={prefill?.priceEurMonth}
             className={inputClass}
           />
           {isService && (
@@ -867,7 +900,7 @@ export function ListingForm({
                 <input
                   type="checkbox"
                   name="priceIsEstimate"
-                  defaultChecked={existing?.priceIsEstimate}
+                  defaultChecked={prefill?.priceIsEstimate}
                   className="h-4 w-4 rounded border-canvas-deep text-olive focus:ring-olive"
                 />
                 <span>{t("priceIsEstimate")}</span>
@@ -875,7 +908,7 @@ export function ListingForm({
               <textarea
                 name="pricingNote"
                 rows={2}
-                defaultValue={existing?.pricingNote ?? undefined}
+                defaultValue={prefill?.pricingNote ?? undefined}
                 placeholder={t("pricingNotePlaceholder")}
                 className={`${inputClass} mt-2`}
               />
@@ -886,7 +919,7 @@ export function ListingForm({
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
             <label htmlFor="priceEurMonth" className={labelClass}>
-              {isForSale ? t("salePrice") : t("priceEurMonth")}
+              {isForSale ? t("salePrice") : isTemporary ? t("pricePerNight") : t("priceEurMonth")}
             </label>
             <input
               id="priceEurMonth"
@@ -894,7 +927,7 @@ export function ListingForm({
               type="number"
               min="0"
               required
-              defaultValue={existing?.priceEurMonth}
+              defaultValue={prefill?.priceEurMonth}
               className={inputClass}
             />
           </div>
@@ -908,7 +941,7 @@ export function ListingForm({
               type="number"
               min="0"
               required
-              defaultValue={existing?.bedrooms ?? undefined}
+              defaultValue={prefill?.bedrooms ?? undefined}
               className={inputClass}
             />
           </div>
@@ -922,7 +955,7 @@ export function ListingForm({
               type="number"
               min="0"
               required
-              defaultValue={existing?.bathrooms ?? undefined}
+              defaultValue={prefill?.bathrooms ?? undefined}
               className={inputClass}
             />
           </div>
@@ -935,7 +968,7 @@ export function ListingForm({
               name="sizeSqm"
               type="number"
               min="0"
-              defaultValue={existing?.sizeSqm ?? undefined}
+              defaultValue={prefill?.sizeSqm ?? undefined}
               className={inputClass}
             />
           </div>
@@ -951,9 +984,45 @@ export function ListingForm({
             id="availableFrom"
             name="availableFrom"
             type="date"
-            defaultValue={existing?.availableFrom?.slice(0, 10) ?? undefined}
+            defaultValue={prefill?.availableFrom?.slice(0, 10) ?? undefined}
             className={inputClass}
           />
+        </div>
+      )}
+
+      {/* Temporary living: how many it sleeps (what families filter by)
+          and the shortest stay accepted. */}
+      {isTemporary && (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="maxGuests" className={labelClass}>
+              {t("maxGuests")}
+            </label>
+            <input
+              id="maxGuests"
+              name="maxGuests"
+              type="number"
+              min="1"
+              max="30"
+              required
+              defaultValue={prefill?.maxGuests ?? undefined}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="minNights" className={labelClass}>
+              {t("minNights")}
+            </label>
+            <input
+              id="minNights"
+              name="minNights"
+              type="number"
+              min="1"
+              max="365"
+              defaultValue={prefill?.minNights ?? undefined}
+              className={inputClass}
+            />
+          </div>
         </div>
       )}
 
@@ -978,8 +1047,8 @@ export function ListingForm({
                 value={key}
                 label={tAmenities(key)}
                 chipLabel={tAmenities(key)}
-                defaultChecked={existing?.amenities.includes(key)}
-                defaultStarred={existing?.highlights.includes(key)}
+                defaultChecked={prefill?.amenities.includes(key)}
+                defaultStarred={prefill?.highlights.includes(key)}
                 starLabel={t("highlightOnCard", { item: tAmenities(key) })}
                 onStarResult={setHighlightRefusal}
               />
@@ -998,7 +1067,7 @@ export function ListingForm({
             name="parkingSpaces"
             type="number"
             min="0"
-            defaultValue={existing?.parkingSpaces ?? undefined}
+            defaultValue={prefill?.parkingSpaces ?? undefined}
             placeholder={t("parkingSpacesPlaceholder")}
             className={inputClass}
           />
@@ -1016,8 +1085,8 @@ export function ListingForm({
                 value={key}
                 label={tNearbyAmenities(key)}
                 chipLabel={`📍 ${tNearbyAmenities(key)}`}
-                defaultChecked={existing?.nearbyAmenities.includes(key)}
-                defaultStarred={existing?.highlights.includes(key)}
+                defaultChecked={prefill?.nearbyAmenities.includes(key)}
+                defaultStarred={prefill?.highlights.includes(key)}
                 starLabel={t("highlightOnCard", { item: tNearbyAmenities(key) })}
                 onStarResult={setHighlightRefusal}
               />
@@ -1032,7 +1101,7 @@ export function ListingForm({
             <label htmlFor="internetType" className={labelClass}>
               {t("internetType")}
             </label>
-            <select id="internetType" name="internetType" className={inputClass} defaultValue={existing?.internetType ?? ""}>
+            <select id="internetType" name="internetType" className={inputClass} defaultValue={prefill?.internetType ?? ""}>
               <option value="">{t("notSpecified")}</option>
               <option value="dsl">{t("internetTypeDsl")}</option>
               <option value="cable">{t("internetTypeCable")}</option>
@@ -1048,7 +1117,7 @@ export function ListingForm({
               name="internetSpeedMbps"
               type="number"
               min="0"
-              defaultValue={existing?.internetSpeedMbps ?? undefined}
+              defaultValue={prefill?.internetSpeedMbps ?? undefined}
               className={inputClass}
             />
           </div>
@@ -1061,7 +1130,7 @@ export function ListingForm({
             <label htmlFor="heatType" className={labelClass}>
               {t("heatType")}
             </label>
-            <select id="heatType" name="heatType" className={inputClass} defaultValue={existing?.heatType ?? ""}>
+            <select id="heatType" name="heatType" className={inputClass} defaultValue={prefill?.heatType ?? ""}>
               <option value="">{t("notSpecified")}</option>
               <option value="gas">{t("heatTypeGas")}</option>
               <option value="oil">{t("heatTypeOil")}</option>
@@ -1072,7 +1141,7 @@ export function ListingForm({
             <label htmlFor="stoveType" className={labelClass}>
               {t("stoveType")}
             </label>
-            <select id="stoveType" name="stoveType" className={inputClass} defaultValue={existing?.stoveType ?? ""}>
+            <select id="stoveType" name="stoveType" className={inputClass} defaultValue={prefill?.stoveType ?? ""}>
               <option value="">{t("notSpecified")}</option>
               <option value="induction">{t("stoveTypeInduction")}</option>
               <option value="standard">{t("stoveTypeStandard")}</option>
@@ -1083,7 +1152,7 @@ export function ListingForm({
 
       {isRental && (
         <label className="flex items-center gap-2 text-sm text-charcoal">
-          <input type="checkbox" name="isNew" defaultChecked={existing?.isNew} className="h-4 w-4 rounded border-canvas-deep text-olive focus:ring-olive" />
+          <input type="checkbox" name="isNew" defaultChecked={prefill?.isNew} className="h-4 w-4 rounded border-canvas-deep text-olive focus:ring-olive" />
           <span>{t("isNewLabel")}</span>
         </label>
       )}
@@ -1105,7 +1174,7 @@ export function ListingForm({
                   type="radio"
                   name="availableTo"
                   value={value}
-                  defaultChecked={value === (existing?.availableTo ?? "everyone")}
+                  defaultChecked={value === (prefill?.availableTo ?? "everyone")}
                   className="sr-only"
                 />
                 {value === "everyone"
@@ -1119,7 +1188,7 @@ export function ListingForm({
         </fieldset>
       )}
 
-      {isRental && <EnergyCertificateFields existing={existing} />}
+      {isRental && <EnergyCertificateFields existing={prefill} />}
 
       <p className={sectionHeadingClass}>{t("sectionPhotos")}</p>
 

@@ -16,6 +16,7 @@ Key facts:
 ## Homes
 - [Homes for rent](https://www.milhaus.de/listings): Houses and apartments for rent near U.S. bases in Germany, filterable by base, bedrooms, price, features (garage, garden, pet friendly…) and who the home is available to.
 - [Homes for sale](https://www.milhaus.de/listings?for=sale): Houses for sale near U.S. bases, listed by their owners — often families selling before a PCS move.
+- [Temporary living](https://www.milhaus.de/listings?for=temporary): Furnished short-term places to stay near U.S. bases, priced per night — for families arriving in or leaving Germany on PCS.
 - [For landlords](https://www.milhaus.de/for-landlords): How owners and property managers list homes on Milhaus.
 
 ## Cars

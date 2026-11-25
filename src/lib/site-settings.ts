@@ -15,7 +15,7 @@ import type { PriceableType } from "@/lib/listing-prices";
 import { createClient } from "@/lib/supabase/server";
 
 /** The categories Charlie can pick, in the order the admin form shows them. */
-export const PROMO_TYPES = ["rental", "rental_sale", "car", "business"] as const satisfies readonly PriceableType[];
+export const PROMO_TYPES = ["rental", "rental_sale", "rental_temporary", "car", "business"] as const satisfies readonly PriceableType[];
 
 export interface Promotion {
   enabled: boolean;

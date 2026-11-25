@@ -39,7 +39,9 @@ export function mapRow(row: Record<string, unknown>): Listing {
     priceEurMonth: Number(row.price_eur_month),
     // Rows from before 20261104120000_add_homes_for_sale.sql have no
     // offer_type at all; they were all rentals.
-    offerType: row.offer_type === "sale" ? "sale" : "rent",
+    offerType: row.offer_type === "sale" || row.offer_type === "temporary" ? row.offer_type : "rent",
+    maxGuests: details.max_guests === null || details.max_guests === undefined ? null : Number(details.max_guests),
+    minNights: details.min_nights === null || details.min_nights === undefined ? null : Number(details.min_nights),
     bedrooms: details.bedrooms === null || details.bedrooms === undefined ? null : Number(details.bedrooms),
     bathrooms: details.bathrooms === null || details.bathrooms === undefined ? null : Number(details.bathrooms),
     sizeSqm: details.size_sqm === null || details.size_sqm === undefined ? null : Number(details.size_sqm),

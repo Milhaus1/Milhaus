@@ -33,7 +33,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const listing = await getListingById(id);
   if (!listing) return { title: "Listing not found", robots: { index: false, follow: false } };
 
-  const title = `${listing.city} · ${currencyFormatter.format(listing.priceEurMonth)}${listing.offerType === "sale" ? " · for sale" : "/mo"}`;
+  const priceSuffix = listing.offerType === "sale" ? " · for sale" : listing.offerType === "temporary" ? "/night" : "/mo";
+  const title = `${listing.city} · ${currencyFormatter.format(listing.priceEurMonth)}${priceSuffix}`;
   const description = listing.description || `${listing.bedrooms}-bedroom home in ${listing.city}.`;
   return {
     ...pageMetadata({
@@ -62,6 +63,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
   const isRented = listing.status === "rented";
   const isForSale = listing.offerType === "sale";
+  // Temporary living (2026-11-25): per night, with guests and minimum stay.
+  const isTemporary = listing.offerType === "temporary";
+  const homesPath = isForSale ? "/listings?for=sale" : isTemporary ? "/listings?for=temporary" : "/listings";
 
   const supabase = await createClient();
   const {
@@ -129,8 +133,8 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               "@type": "UnitPriceSpecification",
               price: listing.priceEurMonth,
               priceCurrency: "EUR",
-              unitCode: "MON",
-              unitText: "month",
+              unitCode: isTemporary ? "DAY" : "MON",
+              unitText: isTemporary ? "night" : "month",
             },
           }),
       availability: isRented ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
@@ -142,9 +146,12 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Milhaus", item: SITE_URL },
-      isForSale
-        ? { "@type": "ListItem", position: 2, name: "Homes for sale", item: `${SITE_URL}/listings?for=sale` }
-        : { "@type": "ListItem", position: 2, name: "Homes", item: `${SITE_URL}/listings` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: isForSale ? "Homes for sale" : isTemporary ? "Temporary living" : "Homes",
+        item: `${SITE_URL}${homesPath}`,
+      },
       { "@type": "ListItem", position: 3, name: listing.title, item: `${SITE_URL}/listings/${listing.id}` },
     ],
   };
@@ -155,7 +162,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <div className="mx-auto max-w-[860px] px-8">
-        <Link href={isForSale ? "/listings?for=sale" : "/listings"} className="mb-6 inline-block text-sm text-ink-soft hover:text-ink">
+        <Link href={homesPath} className="mb-6 inline-block text-sm text-ink-soft hover:text-ink">
           {t("backToListings")}
         </Link>
 
@@ -181,7 +188,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <div className="text-right">
             <div className="font-body text-2xl font-semibold text-ink">
               {currencyFormatter.format(listing.priceEurMonth)}
-              {!isForSale && <span className="text-base font-normal text-ink-soft"> / mo</span>}
+              {!isForSale && (
+                <span className="text-base font-normal text-ink-soft"> {isTemporary ? t("perNight") : "/ mo"}</span>
+              )}
             </div>
             <span
               className={`mt-1 inline-block rounded-[3px] px-2 py-0.5 font-body text-[0.7rem] font-semibold uppercase tracking-wider ${
@@ -200,6 +209,8 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <span>{listing.bedrooms} {t("bed")}</span>
           <span>{listing.bathrooms} {t("bath")}</span>
           {listing.sizeSqm != null && <span>{listing.sizeSqm} m²</span>}
+          {isTemporary && listing.maxGuests != null && <span>{t("sleeps", { count: listing.maxGuests })}</span>}
+          {isTemporary && listing.minNights != null && <span>{t("minNights", { count: listing.minNights })}</span>}
           {listing.parkingSpaces != null && (
             <span>{t("parking", { count: listing.parkingSpaces })}</span>
           )}

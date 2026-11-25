@@ -23,6 +23,8 @@ export interface ListingFiltersUpdate {
   bases?: string[];
   amenities?: AmenityKey[];
   minBedrooms?: number;
+  /** Temporary living only (2026-11-25): sleeps at least this many. */
+  minGuests?: number;
   moveIn?: string;
   priceMin?: number | null;
   priceMax?: number | null;
@@ -45,6 +47,7 @@ export function useListingFilters() {
     [searchParams],
   );
   const minBedrooms = Number(searchParams.get("bedrooms")) || 0;
+  const minGuests = Number(searchParams.get("guests")) || 0;
   // moveIn stays a plain "YYYY-MM-DD" string — exactly what
   // <input type="date"> submits and what availableFrom is stored as, so
   // comparing lexically avoids any Date/timezone parsing.
@@ -78,6 +81,7 @@ export function useListingFilters() {
     if (updates.bases !== undefined) set("base", updates.bases.length > 0 ? updates.bases.join(",") : null);
     if (updates.amenities !== undefined) set("amenities", updates.amenities.length > 0 ? updates.amenities.join(",") : null);
     if (updates.minBedrooms !== undefined) set("bedrooms", updates.minBedrooms > 0 ? String(updates.minBedrooms) : null);
+    if (updates.minGuests !== undefined) set("guests", updates.minGuests > 0 ? String(updates.minGuests) : null);
     if (updates.moveIn !== undefined) set("movein", updates.moveIn || null);
     if (updates.priceMin !== undefined) set("priceMin", updates.priceMin != null ? String(updates.priceMin) : null);
     if (updates.priceMax !== undefined) set("priceMax", updates.priceMax != null ? String(updates.priceMax) : null);
@@ -88,15 +92,17 @@ export function useListingFilters() {
   }
 
   function clearAll() {
-    // Keep which half of the Homes page they're on (?for=sale) — that's
-    // a tab, not a filter.
-    const forSale = searchParams.get("for") === "sale";
-    router.replace(`${pathname}${forSale ? "?for=sale" : ""}#listings`, { scroll: false });
+    // Keep which tab of the Homes page they're on (?for=sale or
+    // ?for=temporary) — that's a tab, not a filter.
+    const tab = searchParams.get("for");
+    const keep = tab === "sale" || tab === "temporary" ? `?for=${tab}` : "";
+    router.replace(`${pathname}${keep}#listings`, { scroll: false });
   }
 
   const activeCount =
     activeBases.length +
     (minBedrooms > 0 ? 1 : 0) +
+    (minGuests > 0 ? 1 : 0) +
     (moveIn ? 1 : 0) +
     activeAmenities.length +
     (priceMin != null ? 1 : 0) +
@@ -107,6 +113,7 @@ export function useListingFilters() {
     ALL_BASES,
     activeBases,
     minBedrooms,
+    minGuests,
     moveIn,
     activeAmenities,
     priceMin,

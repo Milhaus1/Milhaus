@@ -139,7 +139,8 @@
     "placeholderBusinessCta": "List your business",
     "placeholderOfferHeading": "Your offer could be here",
     "placeholderOfferBody": "Put your promotion in front of the American community in Germany.",
-    "placeholderOfferCta": "Advertise with us"
+    "placeholderOfferCta": "Advertise with us",
+    "heroCategoryTemporary": "Temporary Living"
   },
   "ListingsGrid": {
     "heading": "Open right now",
@@ -160,7 +161,10 @@
     "placeholder3Heading": "Managing several homes?",
     "placeholder3Body": "We'll set your listings up directly.",
     "placeholder3Cta": "Get in touch",
-    "searchPlaceholder": "Search by city or address…"
+    "searchPlaceholder": "Search by city or address…",
+    "filterGuests": "Guests",
+    "anyGuests": "Any number",
+    "emptyGuests": "for {count}+ guests"
   },
   "ListingCard": {
     "perMonth": "/ mo",
@@ -176,7 +180,10 @@
     "forRentBadge": "For rent",
     "forSaleBadge": "For sale",
     "sold": "Sold",
-    "featuredBadge": "Featured"
+    "featuredBadge": "Featured",
+    "temporaryBadge": "Short stay",
+    "perNight": "/ night",
+    "sleeps": "Sleeps {count}"
   },
   "ListingForm": {
     "title": "Title",
@@ -302,7 +309,10 @@
     "highlightOnCard": "Show {item} on the card",
     "highlightsFull": "That one won't fit — your card already has a full line of highlights. Remove a star to choose this instead.",
     "highlightsMax": "You can highlight up to {max} — remove a star to choose this one instead.",
-    "newCarHint": "Dealers selling a new car: German law (Pkw-EnVKV) requires its fuel/energy consumption and CO₂ emissions in the ad — add them to the description. Not needed for used cars."
+    "newCarHint": "Dealers selling a new car: German law (Pkw-EnVKV) requires its fuel/energy consumption and CO₂ emissions in the ad — add them to the description. Not needed for used cars.",
+    "pricePerNight": "€ / night",
+    "maxGuests": "Sleeps (guests)",
+    "minNights": "Minimum stay (nights, optional)"
   },
   "ListingDetail": {
     "backToListings": "← Back to listings",
@@ -342,13 +352,19 @@
     "availableToMilitaryOnly": "US Military only",
     "availableToMilitaryAndExpats": "US Military & Expats",
     "sold": "Sold",
-    "forSale": "For sale"
+    "forSale": "For sale",
+    "perNight": "/ night",
+    "sleeps": "Sleeps {count}",
+    "minNights": "{count, plural, =1 {1 night minimum} other {# nights minimum}}"
   },
   "PostPage": {
     "heading": "List your home",
     "body": "A few details and some photos — it goes live right away (or as soon as payment clears, if this category currently charges a posting fee).",
     "saleHeading": "Sell your home",
-    "saleBody": "A few details and some photos — it goes live right away (or as soon as payment clears, if selling a home currently has a posting fee)."
+    "saleBody": "A few details and some photos — it goes live right away (or as soon as payment clears, if selling a home currently has a posting fee).",
+    "temporaryHeading": "List temporary living",
+    "temporaryBody": "A furnished place for a short stay, priced per night. A few details and some photos — it goes live right away (or as soon as payment clears, if this category currently has a posting fee).",
+    "copyNote": "The details of “{title}” are filled in below. Change what is different and add this place’s own photos."
   },
   "SignIn": {
     "heading": "Sign in",
@@ -655,7 +671,9 @@
     "businessLive": "Live",
     "businessWaitingConsent": "Waiting for the business to confirm the email we sent",
     "businessWaitingPayment": "Waiting for payment",
-    "businessHidden": "Not shown on the site"
+    "businessHidden": "Not shown on the site",
+    "perNight": "/night",
+    "copy": "Copy"
   },
   "ReportListing": {
     "button": "Report this listing",
@@ -680,7 +698,9 @@
     "saleHeading": "A Home for Sale",
     "saleBody": "Selling a house or apartment you own.",
     "individualNote": "Homes and cars are free for you because your profile says you're a private individual. Businesses pay the normal price. <link>Change this in My listings</link>.",
-    "freeDaysLeft": "{moreDays, plural, =0 {today only} =1 {for <num>1</num> more day} other {for <num>#</num> more days}}"
+    "freeDaysLeft": "{moreDays, plural, =0 {today only} =1 {for <num>1</num> more day} other {for <num>#</num> more days}}",
+    "temporaryHeading": "Temporary Living",
+    "temporaryBody": "Furnished short stays, priced per night."
   },
   "ListingsPage": {
     "metaTitle": "Homes for rent",
@@ -688,14 +708,20 @@
     "heading": "Homes for rent",
     "subhead": "Homes listed by landlords and outgoing families, checked before they go live.",
     "postAHome": "List your home",
-    "tabsLabel": "Homes for rent or for sale",
+    "tabsLabel": "Homes for rent, for sale or temporary living",
     "tabRent": "For rent",
     "tabSale": "For sale",
     "saleHeading": "Homes for sale",
     "saleSubhead": "Homes for sale near US military bases in Germany, listed by their owners.",
     "saleMetaTitle": "Homes for sale",
     "saleMetaDescription": "Homes for sale near US military bases in Germany, listed by their owners — taken down the day they're sold.",
-    "postAHomeForSale": "Sell your home"
+    "postAHomeForSale": "Sell your home",
+    "tabTemporary": "Temporary",
+    "temporaryHeading": "Temporary living",
+    "temporarySubhead": "Furnished places to stay for a few nights or a few months near US military bases — for when you have just arrived or are about to leave.",
+    "temporaryMetaTitle": "Temporary living near US bases",
+    "temporaryMetaDescription": "Furnished short-term places to stay near US military bases in Germany, priced per night — for families arriving or leaving on PCS.",
+    "postTemporary": "List temporary living"
   },
   "PostBusinessPage": {
     "heading": "List your business",

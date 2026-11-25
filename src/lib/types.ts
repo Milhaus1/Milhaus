@@ -4,7 +4,10 @@
 // Supabase is wired up, and the real Supabase queries later, share a shape.
 
 export type ListingType = "rental" | "car" | "product" | "service";
-export type OfferType = "rent" | "sale";
+/** Homes only: for rent, for sale (2026-11-04), or temporary living —
+ * furnished short stays, priced per night (2026-11-25, see
+ * 20261125120000_add_temporary_living.sql). */
+export type OfferType = "rent" | "sale" | "temporary";
 
 /** Every listing is "self_listed" — posted by the person renting or
  * selling it. "housing_office" is a retired value kept only because the
@@ -55,12 +58,17 @@ export interface Listing {
   bases: string[] | null;
   distanceToBase: string | null;
   /** The listing's asking price — monthly rent for a home for rent,
-   * one-time asking price for a home for sale or a car. Only display
-   * formatting is conditional (the "/ mo" suffix); the column isn't. */
+   * price per night for temporary living, one-time asking price for a
+   * home for sale or a car. Only display formatting is conditional (the
+   * "/ mo" or "/ night" suffix); the column isn't. */
   priceEurMonth: number;
-  /** Homes only: for rent, or for sale (2026-11-04). Always "rent" on
-   * every other type. */
+  /** Homes only: for rent, for sale or temporary living. Always "rent"
+   * on every other type. */
   offerType: OfferType;
+  /** Temporary living only — how many people it sleeps. */
+  maxGuests: number | null;
+  /** Temporary living only — the shortest stay accepted, in nights. */
+  minNights: number | null;
   /** Rental only — null on a car listing. */
   bedrooms: number | null;
   /** Rental only — null on a car listing. */

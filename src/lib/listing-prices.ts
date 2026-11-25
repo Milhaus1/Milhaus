@@ -11,15 +11,38 @@ import { createClient } from "@/lib/supabase/server";
 import { getPromotion, promotionCovers } from "@/lib/site-settings";
 
 // "rental_sale" is a home for sale — still a type='rental' listing, with
-// its own posting price (Terry, 2026-11-04). priceableType() maps one.
-export type PriceableType = "rental" | "rental_sale" | "car" | "product" | "service" | "business";
+// its own posting price (Terry, 2026-11-04). "rental_temporary" is
+// temporary living, the same way (2026-11-25). priceableType() maps both.
+export type PriceableType = "rental" | "rental_sale" | "rental_temporary" | "car" | "product" | "service" | "business";
 export type ListingPrices = Record<PriceableType, number>;
 
-const DEFAULT_PRICES: ListingPrices = { rental: 0, rental_sale: 0, car: 0, product: 0, service: 0, business: 0 };
+const DEFAULT_PRICES: ListingPrices = {
+  rental: 0,
+  rental_sale: 0,
+  rental_temporary: 0,
+  car: 0,
+  product: 0,
+  service: 0,
+  business: 0,
+};
 
-/** Which posting price a listing pays — a home for sale has its own. */
+/** Which posting price a listing pays — a home for sale and temporary
+ * living each have their own. */
 export function priceableType(type: string, offerType?: string | null): PriceableType {
-  return type === "rental" && offerType === "sale" ? "rental_sale" : (type as PriceableType);
+  if (type === "rental" && offerType === "sale") return "rental_sale";
+  if (type === "rental" && offerType === "temporary") return "rental_temporary";
+  return type as PriceableType;
+}
+
+/** The posting price for a kind of home. */
+export function homePriceType(offerType: string | null | undefined): PriceableType {
+  return priceableType("rental", offerType);
+}
+
+/** A home kind from the address's ?for= ("sale", "temporary"; anything
+ * else is for rent). Used by the Homes page and /post. */
+export function offerFromParam(value: string | null | undefined): "rent" | "sale" | "temporary" {
+  return value === "sale" || value === "temporary" ? value : "rent";
 }
 
 function mapRows(rows: { type: string; price_eur: string | number }[]): ListingPrices {

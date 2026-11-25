@@ -41,6 +41,7 @@ const HIDDEN_TYPES: PriceableType[] = ["product"];
 const TYPE_LABELS: Record<PriceableType, string> = {
   rental: "Homes for rent",
   rental_sale: "Homes for sale",
+  rental_temporary: "Temporary living",
   car: "Cars",
   product: "Items for sale",
   service: "Services",

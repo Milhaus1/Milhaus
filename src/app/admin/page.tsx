@@ -242,6 +242,7 @@ export default async function AdminPage() {
                           {formatListingPrice(listing)}
                           {isRental && listing.offerType === "rent" ? "/mo" : ""}
                           {listing.offerType === "sale" ? " · for sale" : ""}
+                          {listing.offerType === "temporary" ? "/night · temporary" : ""}
                         </span>
                         {isCar ? (
                           listing.mileageKm != null && <span>{listing.mileageKm.toLocaleString("en-US")} km</span>
@@ -365,6 +366,7 @@ export default async function AdminPage() {
                         {formatListingPrice(listing)}
                         {listing.type === "rental" && listing.offerType === "rent" ? "/mo" : ""}
                         {listing.offerType === "sale" ? " · for sale" : ""}
+                        {listing.offerType === "temporary" ? "/night · temporary" : ""}
                       </td>
                       <td className="px-4 py-3 font-mono text-ink-soft">{listing.viewCount}</td>
                       <td className="px-4 py-3">
@@ -538,5 +540,7 @@ export default async function AdminPage() {
 function soldWording(listing: Listing): "rented" | "sold" | "unavailable" {
   if (listing.type === "service") return "unavailable";
   if (listing.type === "rental" && listing.offerType === "rent") return "rented";
+  // Temporary living (2026-11-25): a place that's booked up, not rented out.
+  if (listing.offerType === "temporary") return "unavailable";
   return "sold";
 }
