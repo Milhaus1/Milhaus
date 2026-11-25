@@ -60,7 +60,7 @@ export default async function EditBusinessPage({
   if (!business || (business.ownerId !== user!.id && !isAdmin)) {
     return (
       <main className="flex-1 py-14">
-        <div className="mx-auto max-w-[640px] px-8">
+        <div className="mx-auto max-w-160 px-8">
           <h1 className="mb-2 font-display text-3xl font-semibold text-ink">{t("notYoursHeading")}</h1>
           <p className="text-ink-soft">{t("notYoursBody")}</p>
         </div>
@@ -70,7 +70,7 @@ export default async function EditBusinessPage({
 
   return (
     <main className="flex-1 py-14">
-      <div className="mx-auto max-w-[640px] px-4 sm:px-8">
+      <div className="mx-auto max-w-160 px-4 sm:px-8">
         {isAdmin ? (
           // Admin lives outside [locale], so not the locale-aware Link.
           <NextLink href="/admin/businesses" className="mb-6 inline-block text-sm text-ink-soft hover:text-ink">

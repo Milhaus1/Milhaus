@@ -37,7 +37,7 @@ export default async function WithdrawalReceivedPage({ searchParams }: { searchP
 
   return (
     <main className="flex-1 py-14">
-      <div className="mx-auto max-w-[640px] px-8">
+      <div className="mx-auto max-w-160 px-8">
         <h1 className="mb-3 font-display text-3xl font-semibold text-ink">{t("receivedHeading")}</h1>
         <p className="mb-8 text-ink-soft">{t("receivedBody")}</p>
 

@@ -40,7 +40,7 @@ export default async function AdminNewAdPage({ searchParams }: { searchParams: P
 
   return (
     <main className="flex-1 py-14">
-      <div className="mx-auto max-w-[640px] px-8">
+      <div className="mx-auto max-w-160 px-8">
         <Link href="/admin/ads" className="mb-6 inline-block text-sm text-ink-soft hover:text-ink">
           ← Back to ad slots
         </Link>

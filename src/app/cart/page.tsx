@@ -72,7 +72,7 @@ export default async function CartPage() {
 
   return (
     <main className="flex-1 py-14">
-      <div className="mx-auto max-w-[640px] px-8">
+      <div className="mx-auto max-w-160 px-8">
         <Link href={backHref} className="mb-4 inline-block text-sm text-ink-soft hover:text-ink">
           ← Continue shopping
         </Link>

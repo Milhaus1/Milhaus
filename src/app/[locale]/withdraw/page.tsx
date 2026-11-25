@@ -39,7 +39,7 @@ export default async function WithdrawPage() {
 
   return (
     <main className="flex-1 py-14">
-      <div className="mx-auto max-w-[640px] px-8">
+      <div className="mx-auto max-w-160 px-8">
         <h1 className="mb-3 font-display text-3xl font-semibold text-ink">{t("heading")}</h1>
         <p className="mb-2 text-ink-soft">{t("intro")}</p>
         <p className="mb-8 text-sm text-ink-soft">
