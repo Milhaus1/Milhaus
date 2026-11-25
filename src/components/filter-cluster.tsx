@@ -5,10 +5,15 @@
 // popover and reports open/closed. The filter bar itself owns all the
 // pending-vs-applied state; this component has no opinion on what kind
 // of controls live inside (checkboxes, a price range, anything).
+//
+// The panel opens under its button, nudged left if it would run off the
+// right edge of the screen — on a phone, a button on the right half of
+// the bar pushed the 300px panel off-screen (found 2026-11-25 when the
+// distance choice made the Events "Where" panel wider).
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export function FilterCluster({
   label,
@@ -23,6 +28,17 @@ export function FilterCluster({
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Before the panel is painted: if its right edge is past the screen's
+  // (less a 16px gutter), shift it left by the difference.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!open || !panel) return;
+    panel.style.transform = "";
+    const overflow = panel.getBoundingClientRect().right - (document.documentElement.clientWidth - 16);
+    if (overflow > 0) panel.style.transform = `translateX(-${overflow}px)`;
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -55,7 +71,7 @@ export function FilterCluster({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-2 w-[min(90vw,300px)] max-h-[70vh] overflow-y-auto rounded-md border border-canvas-deep bg-paper p-4 shadow-[0_14px_34px_rgba(27,42,58,0.18)]">
+        <div ref={panelRef} className="absolute left-0 top-full z-30 mt-2 w-[min(90vw,300px)] max-h-[70vh] overflow-y-auto rounded-md border border-canvas-deep bg-paper p-4 shadow-[0_14px_34px_rgba(27,42,58,0.18)]">
           {children}
         </div>
       )}

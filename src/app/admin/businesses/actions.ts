@@ -23,6 +23,7 @@
 
 "use server";
 
+import { locateLater } from "@/lib/geocode";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { BUSINESS_CATEGORY_KEYS, BUSINESS_TAG_KEYS, type BusinessCategoryKey } from "@/lib/businesses";
@@ -158,6 +159,8 @@ export async function createBusiness(formData: FormData) {
     if (sent) await admin.from("businesses").update({ confirmation_email_sent_at: now }).eq("id", created.id);
   }
 
+  // On the map for the Services page's distance filter (2026-11-25).
+  locateLater("businesses", created.id);
   revalidateBusinessPaths();
   redirect("/admin/businesses");
 }

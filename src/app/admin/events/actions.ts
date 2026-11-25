@@ -9,6 +9,7 @@
 
 "use server";
 
+import { locateLater } from "@/lib/geocode";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eventMoment } from "@/lib/event-times";
@@ -129,6 +130,8 @@ export async function createEvent(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  // On the map for the Events page's distance filter (2026-11-25).
+  locateLater("events", eventId);
   revalidateEventPaths();
 }
 
@@ -202,6 +205,8 @@ export async function updateEvent(formData: FormData) {
   if (error) fail(error.message);
   if (!saved?.length) fail("That didn't save — you may need to sign in again.");
 
+  // The town may have changed — back on the map (2026-11-25).
+  locateLater("events", id);
   revalidateEventPaths();
   revalidatePath(`/events/${id}`);
   redirect(`${back}?saved=1`);

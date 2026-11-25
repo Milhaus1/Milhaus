@@ -16,6 +16,8 @@ function mapRow(row: Record<string, unknown>): Event {
     organizerUrl: (row.organizer_url as string | null) ?? null,
     city: row.city as string,
     base: (row.base as string | null) ?? null,
+    latitude: row.latitude === null || row.latitude === undefined ? null : Number(row.latitude),
+    longitude: row.longitude === null || row.longitude === undefined ? null : Number(row.longitude),
     category: isEventCategory(row.category) ? row.category : null,
     startsAt: row.starts_at as string,
     endsAt: (row.ends_at as string | null) ?? null,

@@ -1,23 +1,26 @@
 // src/lib/geocode.ts
-// Puts a home on the map: looks up its address on OpenStreetMap
-// (Nominatim) and saves the latitude/longitude on the listing, for the
-// Homes page's "within 30 / 50 km of a base" filter (Terry's ask,
-// 2026-11-25; see 20261125150000_add_listing_location.sql).
+// Puts homes, cars, businesses and events on the map: looks up the
+// address (or town) on OpenStreetMap (Nominatim) and saves the latitude/
+// longitude, for every page's "within 30 / 50 km of a base" filter
+// (Terry's asks, 2026-11-25; see 20261125150000_add_listing_location.sql
+// and 20261125170000_add_business_event_location.sql).
 //
 // Why OpenStreetMap: free, no account or key to hand over to Charlie, and
 // a home's street and town are already public on its listing page. Its
 // rules for a site like this: at most one lookup a second and a name the
 // requests can be recognised by (USER_AGENT) — fine for one lookup per
-// posted or edited home, plus the daily job's catch-up (it waits between
-// lookups). Searches near the lister's chosen base first (see
-// BASE_BOX_DEGREES). If the service is down or can't find the address, the home
-// just keeps no position and the filter uses the lister's own "nearest
-// base" instead; nothing is blocked.
+// posted or edited item, plus the daily job's catch-up (it waits between
+// lookups). Searches near the poster's chosen base first (see
+// BASE_BOX_DEGREES). If the service is down or can't find the address,
+// the item just keeps no position and the filter uses the base it was
+// listed under instead; nothing is blocked.
 //
 // Server only — it uses the service-role client.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { after } from "next/server";
 import { BASE_COORDINATES, type BaseName } from "@/lib/bases";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const USER_AGENT = "Milhaus/1.0 (+https://www.milhaus.de)";
 
@@ -86,6 +89,13 @@ export async function locateAddress(
   if (box) attempts.push({ city, ...box });
   if (address) attempts.push({ street: address, city });
   attempts.push({ city });
+  // "Stuttgart / Sindelfingen" (an event in two towns) isn't a place
+  // OpenStreetMap knows — try the first town on its own.
+  const firstTown = city.split(/[/,]/)[0].trim();
+  if (firstTown && firstTown !== city.trim()) {
+    if (box) attempts.push({ city: firstTown, ...box });
+    attempts.push({ city: firstTown });
+  }
 
   for (const params of attempts) {
     const found = await lookUp(params);
@@ -95,24 +105,41 @@ export async function locateAddress(
   return null;
 }
 
-/** Look up one home and save where it is (or that it couldn't be found).
- * `admin` is the service-role client — the caller has already checked
- * who's allowed to trigger this. Homes only: cars and services aren't
- * filtered by distance. */
-export async function locateListing(admin: SupabaseClient, listingId: string): Promise<void> {
-  const { data: listing } = await admin
-    .from("listings")
-    .select("type, city, base, rental_details(address)")
-    .eq("id", listingId)
-    .maybeSingle();
-  if (!listing || listing.type !== "rental") return;
+/** The tables that have a map position (2026-11-25): listings (homes
+ * and cars), businesses and events. */
+export type PlaceTable = "listings" | "businesses" | "events";
 
-  const details = listing.rental_details as { address: string | null } | { address: string | null }[] | null;
+/** Look up one home, car, business or event and save where it is (or
+ * that it couldn't be found). Homes are looked up by street and town;
+ * everything else by town — that's all they have, and plenty for 30–50
+ * km. `admin` is the service-role client — the caller has already
+ * checked who's allowed to trigger this. */
+export async function locatePlace(admin: SupabaseClient, table: PlaceTable, id: string): Promise<void> {
+  const columns = table === "listings" ? "city, base, bases, rental_details(address)" : "city, base";
+  const { data } = await admin.from(table).select(columns).eq("id", id).maybeSingle();
+  if (!data) return;
+  const row = data as unknown as {
+    city: string | null;
+    base: string | null;
+    bases?: string[] | null;
+    rental_details?: { address: string | null } | { address: string | null }[] | null;
+  };
+
+  const details = row.rental_details;
   const address = Array.isArray(details) ? (details[0]?.address ?? null) : (details?.address ?? null);
-  const point = await locateAddress(address, listing.city as string | null, listing.base as string | null);
+  // A dealer's car listed at several bases: search near the first.
+  const base = row.base ?? row.bases?.[0] ?? null;
+  const point = await locateAddress(address, row.city, base);
 
   await admin
-    .from("listings")
+    .from(table)
     .update({ latitude: point?.[0] ?? null, longitude: point?.[1] ?? null, located_at: new Date().toISOString() })
-    .eq("id", listingId);
+    .eq("id", id);
+}
+
+/** For server actions that have just saved a business or event: look it
+ * up after the response has gone out (Next.js `after`), so nobody waits
+ * for OpenStreetMap. The caller has already checked who may save it. */
+export function locateLater(table: PlaceTable, id: string): void {
+  after(() => locatePlace(createAdminClient(), table, id));
 }

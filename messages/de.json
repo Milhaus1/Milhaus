@@ -164,9 +164,7 @@
     "searchPlaceholder": "Suche nach Stadt oder Adresse…",
     "filterGuests": "Gäste",
     "anyGuests": "Beliebig viele",
-    "emptyGuests": "für {count}+ Gäste",
-    "radiusLabel": "Entfernung zum Stützpunkt",
-    "radiusOption": "{km} km"
+    "emptyGuests": "für {count}+ Gäste"
   },
   "ListingCard": {
     "perMonth": "/ Monat",
@@ -966,5 +964,9 @@
     "save": "Änderungen speichern",
     "notYoursHeading": "Sie können dieses Unternehmen nicht bearbeiten",
     "notYoursBody": "Nur das Konto, mit dem es eingetragen wurde, kann es bearbeiten. Wenn es Ihres ist, melden Sie sich mit diesem Konto an."
+  },
+  "RadiusChoice": {
+    "label": "Entfernung zum Stützpunkt",
+    "option": "{km} km"
   }
 }

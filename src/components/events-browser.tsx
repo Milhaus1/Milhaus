@@ -14,7 +14,9 @@
 // Filters (Terry, 2026-11-04 — Charlie hadn't asked for specific ones, so
 // these use only what an event already has): When (upcoming by default,
 // so finished events stop crowding the list; this week / this weekend /
-// this month; or past), Where (the event's base, else its city) and
+// this month; or past), Where (bases — since 2026-11-25 every event
+// within 30 or 50 km of a picked base, or listed under it; only bases
+// with an event in range are offered — see isNearBase) and
 // Organizer (shown even with a single choice, so Charlie can always see
 // what's filterable). They apply as soon as they're ticked — events are all
 // loaded client-side, so there's no Apply step to wait on. Clicking a
@@ -37,7 +39,9 @@ import { useMemo, useState } from "react";
 import { EventCard } from "@/components/event-card";
 import { FilterCheckboxList } from "@/components/filter-checkbox-list";
 import { FilterCluster } from "@/components/filter-cluster";
+import { RadiusChoice } from "@/components/radius-choice";
 import { SearchNoResultsAlert } from "@/components/search-no-results-alert";
+import { BASE_NAMES, DEFAULT_RADIUS_KM, isNearBase } from "@/lib/bases";
 import { eventDays } from "@/lib/event-times";
 import { EVENT_CATEGORIES, type Event, type EventCategory } from "@/lib/events";
 import { matchesEvent } from "@/lib/search-matching";
@@ -88,10 +92,6 @@ function matchesWhen(event: Event, when: When, now: Date): boolean {
   }
 }
 
-function eventArea(event: Event): string {
-  return event.base ?? event.city;
-}
-
 function toggleIn(list: string[], value: string): string[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
@@ -116,6 +116,7 @@ export function EventsBrowser({
   const [when, setWhen] = useState<When>("upcoming");
   const [categories, setCategories] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
+  const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_RADIUS_KM);
   const [organizers, setOrganizers] = useState<string[]>([]);
   const [monthCursor, setMonthCursor] = useState(() => {
     const now = new Date();
@@ -133,6 +134,7 @@ export function EventsBrowser({
     setWhen("upcoming");
     setCategories([]);
     setAreas([]);
+    setRadiusKm(DEFAULT_RADIUS_KM);
     setOrganizers([]);
     setAlertDismissed(false);
   }
@@ -143,7 +145,12 @@ export function EventsBrowser({
     const used = new Set(events.map((e) => e.category).filter(Boolean));
     return EVENT_CATEGORIES.filter((category) => used.has(category));
   }, [events]);
-  const areaOptions = useMemo(() => [...new Set(events.map(eventArea))].sort(), [events]);
+  // Bases with at least one event within the chosen distance (or listed
+  // under them), in the usual base order — never an empty choice.
+  const areaOptions = useMemo(
+    () => BASE_NAMES.filter((base) => events.some((event) => isNearBase(event, base, radiusKm))),
+    [events, radiusKm],
+  );
   const organizerOptions = useMemo(() => [...new Set(events.map((e) => e.organizerName))].sort(), [events]);
 
   // Search, Where and Organizer — everything except When, which the
@@ -152,11 +159,11 @@ export function EventsBrowser({
     const q = query.trim().toLowerCase();
     return events.filter((event) => {
       if (categories.length > 0 && !(event.category && categories.includes(event.category))) return false;
-      if (areas.length > 0 && !areas.includes(eventArea(event))) return false;
+      if (areas.length > 0 && !areas.some((base) => isNearBase(event, base, radiusKm))) return false;
       if (organizers.length > 0 && !organizers.includes(event.organizerName)) return false;
       return !q || matchesEvent(event, q);
     });
-  }, [events, query, categories, areas, organizers]);
+  }, [events, query, categories, areas, organizers, radiusKm]);
 
   const eventDatesByKey = useMemo(() => {
     const map = new Map<string, number>();
@@ -324,14 +331,23 @@ export function EventsBrowser({
             )}
             {areaOptions.length > 0 && (
               <FilterCluster label="Where" icon="📍" badge={areas.length || undefined}>
-                <FilterCheckboxList
-                  options={areaOptions.map((area) => ({ value: area, label: area }))}
-                  selected={areas}
-                  onToggle={(value) => {
-                    setAreas((prev) => toggleIn(prev, value));
-                    setAlertDismissed(false);
-                  }}
-                />
+                <div className="flex flex-col gap-3">
+                  <RadiusChoice
+                    value={radiusKm}
+                    onChange={(km) => {
+                      setRadiusKm(km);
+                      setAlertDismissed(false);
+                    }}
+                  />
+                  <FilterCheckboxList
+                    options={areaOptions.map((area) => ({ value: area, label: area }))}
+                    selected={areas}
+                    onToggle={(value) => {
+                      setAreas((prev) => toggleIn(prev, value));
+                      setAlertDismissed(false);
+                    }}
+                  />
+                </div>
               </FilterCluster>
             )}
             {organizerOptions.length > 0 && (

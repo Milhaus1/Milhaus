@@ -220,12 +220,12 @@ export function ListingForm({
   const isProduct = kind === "product";
   const isService = kind === "service";
 
-  // Put a home on the map for the Homes page's "within 30 / 50 km of a
-  // base" filter (2026-11-25, see src/lib/geocode.ts). Not awaited: the
-  // lookup can take a few seconds and the lister shouldn't wait for it —
-  // the daily cron job catches up any home this misses.
+  // Put the listing on the map for the "within 30 / 50 km of a base"
+  // filters (2026-11-25, see src/lib/geocode.ts). Not awaited — the
+  // lookup runs on the server after answering, and the daily cron job
+  // catches up anything this misses.
   function locateHome(listingId: string) {
-    if (isRental) void updateListingLocation(listingId).catch(() => undefined);
+    void updateListingLocation(listingId).catch(() => undefined);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

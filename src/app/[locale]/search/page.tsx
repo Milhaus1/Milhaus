@@ -35,8 +35,7 @@ import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getActiveBusinesses } from "@/lib/businesses-queries";
 import { getActiveEvents } from "@/lib/events-queries";
-import { DEFAULT_RADIUS_KM, homeIsNearBase } from "@/lib/bases";
-import { listingBases } from "@/lib/listing-bases";
+import { DEFAULT_RADIUS_KM, isNearBase } from "@/lib/bases";
 import { getActiveListings } from "@/lib/listings";
 import { matchesBusiness, matchesEvent, matchesListing } from "@/lib/search-matching";
 import type { Listing, ListingType } from "@/lib/types";
@@ -84,24 +83,23 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
 
   function countListings(listings: Listing[]): number {
     return listings.filter((listing) => {
-      // Homes count within the Homes page's default distance of the base
-      // (2026-11-25), so this picks the tab the visitor will actually
-      // find results on; everything else by the base it was listed under.
-      if (base && !(listing.type === "rental" ? homeIsNearBase(listing, base, DEFAULT_RADIUS_KM) : listingBases(listing).includes(base)))
-        return false;
+      // Counted within the pages' default distance of the base
+      // (2026-11-25), so this picks the page the visitor will actually
+      // find results on.
+      if (base && !isNearBase(listing, base, DEFAULT_RADIUS_KM)) return false;
       if (lowerQ && !matchesListing(listing, lowerQ)) return false;
       return true;
     }).length;
   }
 
   const businessCount = businesses.filter((business) => {
-    if (base && business.base !== base) return false;
+    if (base && !isNearBase(business, base, DEFAULT_RADIUS_KM)) return false;
     if (lowerQ && !matchesBusiness(business, lowerQ)) return false;
     return true;
   }).length;
 
   const eventCount = events.filter((event) => {
-    if (base && event.base !== base) return false;
+    if (base && !isNearBase(event, base, DEFAULT_RADIUS_KM)) return false;
     if (lowerQ && !matchesEvent(event, lowerQ)) return false;
     return true;
   }).length;

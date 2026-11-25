@@ -28,11 +28,11 @@ import { CarListingCard } from "@/components/car-listing-card";
 import { FilterBar } from "@/components/filter-bar";
 import { FilterCheckboxList } from "@/components/filter-checkbox-list";
 import { FilterCluster } from "@/components/filter-cluster";
+import { RadiusChoice } from "@/components/radius-choice";
 import { PriceRangeFields } from "@/components/price-range-fields";
 import { SearchNoResultsAlert } from "@/components/search-no-results-alert";
-import { BASE_NAMES } from "@/lib/bases";
+import { BASE_NAMES, DEFAULT_RADIUS_KM, isNearBase, nearestKm } from "@/lib/bases";
 import { CAR_BODY_TYPE_KEYS, CAR_BODY_TYPE_LABELS } from "@/lib/car-body-types";
-import { listingBases } from "@/lib/listing-bases";
 import { firstPhotoIndices } from "@/lib/priority-indices";
 import { matchesListing } from "@/lib/search-matching";
 import type { Listing } from "@/lib/types";
@@ -46,6 +46,8 @@ const PHOTO_GRADIENTS = [
 
 type Applied = {
   base: string[];
+  /** km around each picked base (2026-11-25) — see RadiusChoice. */
+  radiusKm: number;
   make: string[];
   year: string[];
   bodyType: string[];
@@ -57,6 +59,7 @@ type Applied = {
 
 const EMPTY_APPLIED: Applied = {
   base: [],
+  radiusKm: DEFAULT_RADIUS_KM,
   make: [],
   year: [],
   bodyType: [],
@@ -141,7 +144,9 @@ export function CarsGrid({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return listings.filter((listing) => {
-      if (applied.base.length > 0 && !listingBases(listing).some((b) => applied.base.includes(b))) return false;
+      // Within 30 / 50 km of a picked base, or listed under it — a dealer
+      // serving several bases shows at each (Terry, 2026-11-25).
+      if (applied.base.length > 0 && !applied.base.some((b) => isNearBase(listing, b, applied.radiusKm))) return false;
       if (applied.make.length > 0 && (!listing.make || !applied.make.includes(listing.make))) return false;
       if (applied.year.length > 0 && (listing.year == null || !applied.year.includes(String(listing.year)))) return false;
       if (applied.bodyType.length > 0 && (!listing.bodyType || !applied.bodyType.includes(listing.bodyType))) return false;
@@ -159,10 +164,15 @@ export function CarsGrid({
   }, [listings, query, applied]);
 
   // Favorited listings first — stable sort, so everything else keeps
-  // its existing relative order.
+  // its existing relative order — then, with a base picked, nearest first.
   const sorted = useMemo(
-    () => [...filtered].sort((a, b) => Number(favoriteIdSet.has(b.id)) - Number(favoriteIdSet.has(a.id))),
-    [filtered, favoriteIdSet],
+    () =>
+      [...filtered].sort(
+        (a, b) =>
+          Number(favoriteIdSet.has(b.id)) - Number(favoriteIdSet.has(a.id)) ||
+          (applied.base.length > 0 ? nearestKm(a, applied.base) - nearestKm(b, applied.base) || 0 : 0),
+      ),
+    [filtered, favoriteIdSet, applied.base],
   );
 
   // Zero inventory (nothing posted yet) stays a plain line of text in
@@ -192,11 +202,14 @@ export function CarsGrid({
         clearLabel={tFilter("clearAll")}
       >
         <FilterCluster label={t("filterBase")} icon="📍" badge={pending.base.length || undefined}>
-          <FilterCheckboxList
-            options={BASE_NAMES.map((b) => ({ value: b, label: b }))}
-            selected={pending.base}
-            onToggle={(value) => setPending((p) => ({ ...p, base: toggleIn(p.base, value) }))}
-          />
+          <div className="flex flex-col gap-3">
+            <RadiusChoice value={pending.radiusKm} onChange={(km) => setPending((p) => ({ ...p, radiusKm: km }))} />
+            <FilterCheckboxList
+              options={BASE_NAMES.map((b) => ({ value: b, label: b }))}
+              selected={pending.base}
+              onToggle={(value) => setPending((p) => ({ ...p, base: toggleIn(p.base, value) }))}
+            />
+          </div>
         </FilterCluster>
 
         <FilterCluster

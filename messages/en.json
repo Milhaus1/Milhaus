@@ -164,9 +164,7 @@
     "searchPlaceholder": "Search by city or address…",
     "filterGuests": "Guests",
     "anyGuests": "Any number",
-    "emptyGuests": "for {count}+ guests",
-    "radiusLabel": "Distance from the base",
-    "radiusOption": "{km} km"
+    "emptyGuests": "for {count}+ guests"
   },
   "ListingCard": {
     "perMonth": "/ mo",
@@ -966,5 +964,9 @@
     "save": "Save changes",
     "notYoursHeading": "You can't edit this business",
     "notYoursBody": "Only the account that listed it can edit it. If it's yours, sign in with that account."
+  },
+  "RadiusChoice": {
+    "label": "Distance from the base",
+    "option": "{km} km"
   }
 }

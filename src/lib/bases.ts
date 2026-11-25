@@ -69,27 +69,37 @@ export function distanceKm([lat1, lng1]: [number, number], [lat2, lng2]: [number
   return 2 * 6371 * Math.asin(Math.sqrt(a));
 }
 
-/** How far a home is from a base, or null when the home hasn't been
- * placed on the map yet (or the base has no position). */
-export function kmFromBase(
-  home: { latitude: number | null; longitude: number | null },
-  base: string,
-): number | null {
+/** Anything the base filters can place: a home, car, business or event.
+ * `bases` is a car dealer's list of several bases, when it has one. */
+export type Placeable = {
+  base: string | null;
+  bases?: string[] | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+/** How far something is from a base, or null when it hasn't been placed
+ * on the map yet (or the base has no position). */
+export function kmFromBase(item: Placeable, base: string): number | null {
   const point = BASE_COORDINATES[base as BaseName];
-  if (!point || home.latitude == null || home.longitude == null) return null;
-  return distanceKm([home.latitude, home.longitude], point);
+  if (!point || item.latitude == null || item.longitude == null) return null;
+  return distanceKm([item.latitude, item.longitude], point);
 }
 
-/** Does a home belong under this base? Yes if it's within the radius, or
- * if its lister picked this base as the nearest — their own choice never
- * hides their home from that base, and it's all there is to go on for a
- * home that hasn't been placed on the map. */
-export function homeIsNearBase(
-  home: { base: string | null; latitude: number | null; longitude: number | null },
-  base: string,
-  radiusKm: number,
-): boolean {
-  if (home.base === base) return true;
-  const km = kmFromBase(home, base);
+/** Does something belong under this base? Yes if it's within the radius,
+ * or if its poster listed it under this base — their own choice never
+ * hides it from that base (a dealer serving several bases, a home that
+ * hasn't been placed on the map yet). Every page's Base filter uses this
+ * since 2026-11-25 (Homes first, then Cars, Services and Events). */
+export function isNearBase(item: Placeable, base: string, radiusKm: number): boolean {
+  if (item.base === base || item.bases?.includes(base)) return true;
+  const km = kmFromBase(item, base);
   return km !== null && km <= radiusKm;
+}
+
+/** Distance to the closest of the picked bases, for "nearest first";
+ * Infinity when it can't be measured, so those sort last. */
+export function nearestKm(item: Placeable, bases: string[]): number {
+  const distances = bases.map((base) => kmFromBase(item, base)).filter((km): km is number => km !== null);
+  return distances.length > 0 ? Math.min(...distances) : Number.POSITIVE_INFINITY;
 }

@@ -29,6 +29,7 @@
 
 "use server";
 
+import { locateLater } from "@/lib/geocode";
 import { redirect } from "next/navigation";
 import { BUSINESS_TAG_KEYS, type BusinessTagKey } from "@/lib/businesses";
 import { tryActivateBusiness } from "@/lib/businesses-queries";
@@ -139,6 +140,9 @@ export async function submitBusiness(formData: FormData) {
     token: created.consent_token,
     consent_method: "email",
   });
+
+  // On the map for the Services page's distance filter (2026-11-25).
+  locateLater("businesses", created.id);
 
   if (created.consent_token) {
     const sent = await sendConsentRequestEmail({ to: email, businessName: created.name, token: created.consent_token });

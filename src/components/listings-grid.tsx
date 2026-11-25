@@ -15,7 +15,7 @@
 //
 // Base (Terry's ask, 2026-11-25): a home counts as "near" a picked base
 // when it's within 30 or 50 km of it (the visitor's choice, 50 by
-// default), or when its lister picked that base — see homeIsNearBase in
+// default), or when its lister picked that base — see isNearBase in
 // src/lib/bases.ts. With a base picked, the nearest homes come first.
 //
 // On the Temporary living tab (2026-11-25) the Specifics cluster also
@@ -31,10 +31,11 @@ import { FilterCheckboxList } from "@/components/filter-checkbox-list";
 import { FilterCluster } from "@/components/filter-cluster";
 import { ListingCard } from "@/components/listing-card";
 import { PriceRangeFields } from "@/components/price-range-fields";
+import { RadiusChoice } from "@/components/radius-choice";
 import { SearchNoResultsAlert } from "@/components/search-no-results-alert";
 import { Link } from "@/i18n/navigation";
 import { AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
-import { BASE_NAMES, DEFAULT_RADIUS_KM, homeIsNearBase, kmFromBase, RADIUS_OPTIONS_KM } from "@/lib/bases";
+import { BASE_NAMES, DEFAULT_RADIUS_KM, isNearBase, nearestKm } from "@/lib/bases";
 import { firstPhotoIndices } from "@/lib/priority-indices";
 import { matchesListing } from "@/lib/search-matching";
 import type { Listing, OfferType } from "@/lib/types";
@@ -185,7 +186,7 @@ export function ListingsGrid({
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return listings.filter((listing) => {
-      if (activeBases.length > 0 && !activeBases.some((base) => homeIsNearBase(listing, base, radiusKm))) return false;
+      if (activeBases.length > 0 && !activeBases.some((base) => isNearBase(listing, base, radiusKm))) return false;
       if (minBedrooms > 0 && listing.bedrooms != null && listing.bedrooms < minBedrooms) return false;
       if (minGuests > 0 && listing.maxGuests != null && listing.maxGuests < minGuests) return false;
       // "I need to move in by this date" — a listing works if it's
@@ -217,10 +218,7 @@ export function ListingsGrid({
   // With a base picked, nearest first (to whichever picked base is
   // closest); homes with no map position go after those that have one.
   const sorted = useMemo(() => {
-    const nearest = (listing: Listing) => {
-      const distances = activeBases.map((base) => kmFromBase(listing, base)).filter((km): km is number => km !== null);
-      return distances.length > 0 ? Math.min(...distances) : Number.POSITIVE_INFINITY;
-    };
+    const nearest = (listing: Listing) => nearestKm(listing, activeBases);
     return [...filtered].sort(
       (a, b) =>
         Number(favoriteIdSet.has(b.id)) - Number(favoriteIdSet.has(a.id)) ||
@@ -272,29 +270,7 @@ export function ListingsGrid({
       >
         <FilterCluster label={t("filterBase")} icon="📍" badge={pendingBases.length || undefined}>
           <div className="flex flex-col gap-3">
-            <fieldset>
-              <legend className="mb-1.5 block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft/75">
-                {t("radiusLabel")}
-              </legend>
-              <div className="flex gap-2">
-                {RADIUS_OPTIONS_KM.map((km) => (
-                  <label
-                    key={km}
-                    className="flex flex-1 cursor-pointer items-center justify-center rounded-md border border-canvas-deep px-3 py-1.5 text-sm text-charcoal has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-olive"
-                  >
-                    <input
-                      type="radio"
-                      name="listings-radius"
-                      value={km}
-                      checked={pendingRadius === km}
-                      onChange={() => setPendingRadius(km)}
-                      className="sr-only"
-                    />
-                    {t("radiusOption", { km })}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <RadiusChoice value={pendingRadius} onChange={setPendingRadius} />
             <FilterCheckboxList
               options={BASE_NAMES.map((base) => ({ value: base, label: base }))}
               selected={pendingBases}

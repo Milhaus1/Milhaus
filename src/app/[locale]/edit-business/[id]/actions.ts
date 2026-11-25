@@ -22,6 +22,7 @@
 
 "use server";
 
+import { locateLater } from "@/lib/geocode";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
@@ -108,6 +109,8 @@ export async function updateBusiness(formData: FormData) {
     .eq("id", id);
   if (error) return fail(error.message);
 
+  // The town may have changed — back on the map (2026-11-25).
+  locateLater("businesses", id);
   revalidatePath("/", "layout");
   redirect({ href: `${back}?saved=1`, locale });
 }

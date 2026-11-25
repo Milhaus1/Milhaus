@@ -16,6 +16,8 @@ function mapRow(row: Record<string, unknown>): Business {
     category: row.category as BusinessCategoryKey,
     city: row.city as string,
     base: (row.base as string | null) ?? null,
+    latitude: row.latitude === null || row.latitude === undefined ? null : Number(row.latitude),
+    longitude: row.longitude === null || row.longitude === undefined ? null : Number(row.longitude),
     rating: row.rating === null || row.rating === undefined ? null : Number(row.rating),
     reviewCount: row.review_count === null || row.review_count === undefined ? null : Number(row.review_count),
     tags: (row.tags as BusinessTagKey[]) ?? [],

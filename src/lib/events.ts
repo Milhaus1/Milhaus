@@ -39,6 +39,11 @@ export interface Event {
   organizerUrl: string | null;
   city: string;
   base: string | null;
+  /** Where it is on the map, looked up from its town (src/lib/geocode.ts)
+   * for the "within 30 / 50 km of a base" filter (2026-11-25). Null until
+   * looked up or if the town couldn't be found. */
+  latitude: number | null;
+  longitude: number | null;
   /** null for events added before categories existed (2026-11-09). */
   category: EventCategory | null;
   startsAt: string;

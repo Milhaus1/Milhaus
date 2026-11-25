@@ -18,8 +18,9 @@ import { BusinessCard } from "@/components/business-card";
 import { FilterBar } from "@/components/filter-bar";
 import { FilterCheckboxList } from "@/components/filter-checkbox-list";
 import { FilterCluster } from "@/components/filter-cluster";
+import { RadiusChoice } from "@/components/radius-choice";
 import { SearchNoResultsAlert } from "@/components/search-no-results-alert";
-import { BASE_NAMES } from "@/lib/bases";
+import { BASE_NAMES, DEFAULT_RADIUS_KM, isNearBase, nearestKm } from "@/lib/bases";
 import {
   BUSINESS_CATEGORY_KEYS,
   BUSINESS_CATEGORY_LABELS,
@@ -32,12 +33,14 @@ import { matchesBusiness } from "@/lib/search-matching";
 
 type Applied = {
   base: string[];
+  /** km around each picked base (2026-11-25) — see RadiusChoice. */
+  radiusKm: number;
   category: string[];
   minRating: number;
   tags: string[];
 };
 
-const EMPTY_APPLIED: Applied = { base: [], category: [], minRating: 0, tags: [] };
+const EMPTY_APPLIED: Applied = { base: [], radiusKm: DEFAULT_RADIUS_KM, category: [], minRating: 0, tags: [] };
 
 function toggleIn<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -88,14 +91,20 @@ export function BusinessesGrid({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return businesses.filter((business) => {
-      if (applied.base.length > 0 && (!business.base || !applied.base.includes(business.base))) return false;
+    const matches = businesses.filter((business) => {
+      // Within 30 / 50 km of a picked base, or listed under it (Terry,
+      // 2026-11-25).
+      if (applied.base.length > 0 && !applied.base.some((b) => isNearBase(business, b, applied.radiusKm))) return false;
       if (applied.category.length > 0 && !applied.category.includes(business.category)) return false;
       if (applied.minRating > 0 && (business.rating == null || business.rating < applied.minRating)) return false;
       if (applied.tags.some((tag) => !business.tags.includes(tag as (typeof business.tags)[number]))) return false;
       if (!q) return true;
       return matchesBusiness(business, q);
     });
+    // With a base picked, nearest first (stable, so ties keep their order).
+    return applied.base.length > 0
+      ? matches.sort((a, b) => nearestKm(a, applied.base) - nearestKm(b, applied.base) || 0)
+      : matches;
   }, [businesses, query, applied]);
 
   const noInventory = businesses.length === 0;
@@ -122,11 +131,14 @@ export function BusinessesGrid({
         clearLabel={tFilter("clearAll")}
       >
         <FilterCluster label={t("filterBase")} icon="📍" badge={pending.base.length || undefined}>
-          <FilterCheckboxList
-            options={BASE_NAMES.map((b) => ({ value: b, label: b }))}
-            selected={pending.base}
-            onToggle={(value) => setPending((p) => ({ ...p, base: toggleIn(p.base, value) }))}
-          />
+          <div className="flex flex-col gap-3">
+            <RadiusChoice value={pending.radiusKm} onChange={(km) => setPending((p) => ({ ...p, radiusKm: km }))} />
+            <FilterCheckboxList
+              options={BASE_NAMES.map((b) => ({ value: b, label: b }))}
+              selected={pending.base}
+              onToggle={(value) => setPending((p) => ({ ...p, base: toggleIn(p.base, value) }))}
+            />
+          </div>
         </FilterCluster>
 
         <FilterCluster
