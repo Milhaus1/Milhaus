@@ -18,6 +18,11 @@
 //    emailed ad invoice paid since the last check, in case Charlie
 //    hasn't opened /admin/ads/orders (which does the same).
 //
+// 4. Put homes on the map that aren't yet (2026-11-25): the home form
+//    looks a home up right after it's saved (src/lib/listing-location.ts),
+//    but doesn't wait for it, so this catches any it missed — a few per
+//    run, a second apart, as OpenStreetMap asks (src/lib/geocode.ts).
+//
 // expires_at itself is set by a database trigger whenever a listing goes
 // live (20261102150000_add_listing_expiry.sql), so this never decides
 // *when* something expires, only acts on it.
@@ -25,10 +30,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { syncOpenAdInvoices } from "@/lib/ad-orders";
 import { sendEmail } from "@/lib/email";
+import { locateListing } from "@/lib/geocode";
 import { SITE_URL } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const WARNING_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+// Homes to look up per daily run — enough to catch up, small enough to
+// finish well within the job's time limit at one lookup a second.
+const LOCATE_PER_RUN = 10;
 
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -86,11 +95,24 @@ export async function GET(request: NextRequest) {
     .select("id");
   const adInvoicesSettled = await syncOpenAdInvoices(admin);
 
+  const { data: unplaced } = await admin
+    .from("listings")
+    .select("id")
+    .eq("type", "rental")
+    .eq("status", "active")
+    .is("located_at", null)
+    .limit(LOCATE_PER_RUN);
+  for (const [index, home] of (unplaced ?? []).entries()) {
+    if (index > 0) await new Promise((resolve) => setTimeout(resolve, 1100));
+    await locateListing(admin, home.id);
+  }
+
   return NextResponse.json({
     expired: expired?.length ?? 0,
     warned,
     adsFinished: finishedAds?.length ?? 0,
     adInvoicesSettled,
+    homesLocated: unplaced?.length ?? 0,
   });
 }
 

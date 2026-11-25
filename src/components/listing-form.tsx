@@ -38,6 +38,7 @@ import { CAR_BODY_TYPE_KEYS, CAR_BODY_TYPE_LABELS } from "@/lib/car-body-types";
 import { classifyFormError } from "@/lib/friendly-error";
 import { CHIP_CLASS, CHIP_GAP_PX, NARROWEST_CHIP_ROW_PX } from "@/components/card-chip-row";
 import { createListingPhotoUploads, deleteRemovedListingPhotos } from "@/lib/listing-edit";
+import { updateListingLocation } from "@/lib/listing-location";
 import { publishFreeListing } from "@/lib/listing-publish";
 import { NEARBY_AMENITY_KEYS } from "@/lib/nearby-amenities";
 import { CONDITION_KEYS, CONDITION_LABELS, PRODUCT_CATEGORY_KEYS, PRODUCT_CATEGORY_LABELS } from "@/lib/product-categories";
@@ -219,6 +220,14 @@ export function ListingForm({
   const isProduct = kind === "product";
   const isService = kind === "service";
 
+  // Put a home on the map for the Homes page's "within 30 / 50 km of a
+  // base" filter (2026-11-25, see src/lib/geocode.ts). Not awaited: the
+  // lookup can take a few seconds and the lister shouldn't wait for it —
+  // the daily cron job catches up any home this misses.
+  function locateHome(listingId: string) {
+    if (isRental) void updateListingLocation(listingId).catch(() => undefined);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // React nulls out event.currentTarget once the synchronous dispatch of
@@ -350,6 +359,7 @@ export function ListingForm({
         setErrorMessage(tErrors(classifyFormError(cartError.message)));
         return;
       }
+      locateHome(listingId);
       router.push("/cart");
       return;
     }
@@ -368,6 +378,7 @@ export function ListingForm({
       }
     }
 
+    locateHome(listingId);
     setStatus("success");
     router.refresh();
   }
@@ -445,6 +456,8 @@ export function ListingForm({
       }
     }
 
+    // The address may have changed.
+    locateHome(listing.id);
     setStatus("success");
     router.refresh();
   }

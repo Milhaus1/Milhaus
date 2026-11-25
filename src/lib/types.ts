@@ -57,6 +57,12 @@ export interface Listing {
    * the form) means "just `base`". */
   bases: string[] | null;
   distanceToBase: string | null;
+  /** Where the home is on the map — looked up from its address by the
+   * site (src/lib/geocode.ts), for the "within 30 / 50 km of a base"
+   * filter (2026-11-25). Null until looked up, if the address couldn't
+   * be found, and on every other listing type. */
+  latitude: number | null;
+  longitude: number | null;
   /** The listing's asking price — monthly rent for a home for rent,
    * price per night for temporary living, one-time asking price for a
    * home for sale or a car. Only display formatting is conditional (the

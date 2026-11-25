@@ -148,7 +148,7 @@
     "filterBase": "Garnison",
     "filterAmenities": "Ausstattung",
     "emptyPrefix": "Keine offenen Angebote",
-    "emptyNear": "in der Nähe von {base}",
+    "emptyNear": "im Umkreis von {radius} km um {base}",
     "emptyBedrooms": "mit {count}+ Schlafzimmern",
     "emptyMoveIn": "verfügbar bis {date}",
     "emptyAmenities": "mit {list}",
@@ -164,7 +164,9 @@
     "searchPlaceholder": "Suche nach Stadt oder Adresse…",
     "filterGuests": "Gäste",
     "anyGuests": "Beliebig viele",
-    "emptyGuests": "für {count}+ Gäste"
+    "emptyGuests": "für {count}+ Gäste",
+    "radiusLabel": "Entfernung zum Stützpunkt",
+    "radiusOption": "{km} km"
   },
   "ListingCard": {
     "perMonth": "/ Monat",

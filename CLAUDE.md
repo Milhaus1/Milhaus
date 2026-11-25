@@ -76,6 +76,11 @@ may hire someone else to change it.
   and a Guests filter. Built for the many temporary-living companies near the
   bases; "Copy" on My Listings starts a new home from an existing one. Never
   label these "TLA approved" (rule 1).
+- **Base filter on Homes = distance** (2026-11-25): a home shows under a base
+  when it's within 30 or 50 km (visitor's choice, 50 default) or its lister
+  picked that base. Homes are placed on the map from their address via
+  OpenStreetMap (`src/lib/geocode.ts`) after each save, with a daily cron
+  catch-up; base positions live in `src/lib/bases.ts`.
 - **Card highlights:** a lister stars up to **3** features / what's-nearby
   items, and only as many as fit one line on the narrowest card. The form
   enforces it; cards never show half a label.

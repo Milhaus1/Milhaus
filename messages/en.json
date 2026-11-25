@@ -148,7 +148,7 @@
     "filterBase": "Base",
     "filterAmenities": "Amenities",
     "emptyPrefix": "No open listings",
-    "emptyNear": "near {base}",
+    "emptyNear": "within {radius} km of {base}",
     "emptyBedrooms": "with {count}+ bedrooms",
     "emptyMoveIn": "available by {date}",
     "emptyAmenities": "with {list}",
@@ -164,7 +164,9 @@
     "searchPlaceholder": "Search by city or address…",
     "filterGuests": "Guests",
     "anyGuests": "Any number",
-    "emptyGuests": "for {count}+ guests"
+    "emptyGuests": "for {count}+ guests",
+    "radiusLabel": "Distance from the base",
+    "radiusOption": "{km} km"
   },
   "ListingCard": {
     "perMonth": "/ mo",

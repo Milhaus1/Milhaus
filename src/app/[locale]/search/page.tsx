@@ -35,6 +35,7 @@ import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getActiveBusinesses } from "@/lib/businesses-queries";
 import { getActiveEvents } from "@/lib/events-queries";
+import { DEFAULT_RADIUS_KM, homeIsNearBase } from "@/lib/bases";
 import { listingBases } from "@/lib/listing-bases";
 import { getActiveListings } from "@/lib/listings";
 import { matchesBusiness, matchesEvent, matchesListing } from "@/lib/search-matching";
@@ -83,7 +84,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
 
   function countListings(listings: Listing[]): number {
     return listings.filter((listing) => {
-      if (base && !listingBases(listing).includes(base)) return false;
+      // Homes count within the Homes page's default distance of the base
+      // (2026-11-25), so this picks the tab the visitor will actually
+      // find results on; everything else by the base it was listed under.
+      if (base && !(listing.type === "rental" ? homeIsNearBase(listing, base, DEFAULT_RADIUS_KM) : listingBases(listing).includes(base)))
+        return false;
       if (lowerQ && !matchesListing(listing, lowerQ)) return false;
       return true;
     }).length;

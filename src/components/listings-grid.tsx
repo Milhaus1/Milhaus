@@ -13,6 +13,11 @@
 // Filter state lives in the URL (?base=...&bedrooms=...) once Applied —
 // useListingFilters is the read/write logic for that "applied" layer.
 //
+// Base (Terry's ask, 2026-11-25): a home counts as "near" a picked base
+// when it's within 30 or 50 km of it (the visitor's choice, 50 by
+// default), or when its lister picked that base — see homeIsNearBase in
+// src/lib/bases.ts. With a base picked, the nearest homes come first.
+//
 // On the Temporary living tab (2026-11-25) the Specifics cluster also
 // asks how many guests, and prices are per night — the Price filter
 // compares the same number, so it just works on nightly prices there.
@@ -29,7 +34,7 @@ import { PriceRangeFields } from "@/components/price-range-fields";
 import { SearchNoResultsAlert } from "@/components/search-no-results-alert";
 import { Link } from "@/i18n/navigation";
 import { AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
-import { BASE_NAMES } from "@/lib/bases";
+import { BASE_NAMES, DEFAULT_RADIUS_KM, homeIsNearBase, kmFromBase, RADIUS_OPTIONS_KM } from "@/lib/bases";
 import { firstPhotoIndices } from "@/lib/priority-indices";
 import { matchesListing } from "@/lib/search-matching";
 import type { Listing, OfferType } from "@/lib/types";
@@ -106,6 +111,7 @@ export function ListingsGrid({
   const isTemporary = offer === "temporary";
   const {
     activeBases,
+    radiusKm,
     minBedrooms,
     minGuests,
     moveIn,
@@ -133,6 +139,7 @@ export function ListingsGrid({
   // dropdowns, not yet applied to the grid. Re-synced from the applied
   // values whenever Apply or Clear actually changes them.
   const [pendingBases, setPendingBases] = useState(activeBases);
+  const [pendingRadius, setPendingRadius] = useState(radiusKm);
   const [pendingAmenities, setPendingAmenities] = useState<AmenityKey[]>(activeAmenities);
   const [pendingBedrooms, setPendingBedrooms] = useState(minBedrooms);
   const [pendingGuests, setPendingGuests] = useState(minGuests);
@@ -144,6 +151,7 @@ export function ListingsGrid({
   function handleApply() {
     applyFilters({
       bases: pendingBases,
+      radiusKm: pendingRadius,
       amenities: pendingAmenities,
       minBedrooms: pendingBedrooms,
       minGuests: pendingGuests,
@@ -157,6 +165,7 @@ export function ListingsGrid({
 
   function handleClearAll() {
     setPendingBases([]);
+    setPendingRadius(DEFAULT_RADIUS_KM);
     setPendingAmenities([]);
     setPendingBedrooms(0);
     setPendingGuests(0);
@@ -176,7 +185,7 @@ export function ListingsGrid({
   const filtered = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     return listings.filter((listing) => {
-      if (activeBases.length > 0 && (!listing.base || !activeBases.includes(listing.base))) return false;
+      if (activeBases.length > 0 && !activeBases.some((base) => homeIsNearBase(listing, base, radiusKm))) return false;
       if (minBedrooms > 0 && listing.bedrooms != null && listing.bedrooms < minBedrooms) return false;
       if (minGuests > 0 && listing.maxGuests != null && listing.maxGuests < minGuests) return false;
       // "I need to move in by this date" — a listing works if it's
@@ -200,15 +209,24 @@ export function ListingsGrid({
       if (!q) return true;
       return matchesListing(listing, q);
     });
-  }, [listings, keyword, activeBases, minBedrooms, minGuests, moveIn, activeAmenities, priceMin, priceMax, activeAvailableTo]);
+  }, [listings, keyword, activeBases, radiusKm, minBedrooms, minGuests, moveIn, activeAmenities, priceMin, priceMax, activeAvailableTo]);
 
   // Favorited listings first — a stable sort (Array.prototype.sort is
   // stable per spec) so everything else keeps its existing relative
   // order, just with favorites pulled to the front.
-  const sorted = useMemo(
-    () => [...filtered].sort((a, b) => Number(favoriteIdSet.has(b.id)) - Number(favoriteIdSet.has(a.id))),
-    [filtered, favoriteIdSet],
-  );
+  // With a base picked, nearest first (to whichever picked base is
+  // closest); homes with no map position go after those that have one.
+  const sorted = useMemo(() => {
+    const nearest = (listing: Listing) => {
+      const distances = activeBases.map((base) => kmFromBase(listing, base)).filter((km): km is number => km !== null);
+      return distances.length > 0 ? Math.min(...distances) : Number.POSITIVE_INFINITY;
+    };
+    return [...filtered].sort(
+      (a, b) =>
+        Number(favoriteIdSet.has(b.id)) - Number(favoriteIdSet.has(a.id)) ||
+        (activeBases.length > 0 ? nearest(a) - nearest(b) || 0 : 0),
+    );
+  }, [filtered, favoriteIdSet, activeBases]);
 
   const hasActiveFilters = activeCount > 0;
   // Only pad the *unfiltered* view — see PlaceholderCard's comment for why.
@@ -219,7 +237,7 @@ export function ListingsGrid({
   const priorityIndices = firstPhotoIndices(sorted, (listing) => listing.photos.length > 0, 3);
   const noResultsMessage = [
     t("emptyPrefix"),
-    activeBases.length > 0 ? t("emptyNear", { base: activeBases.join(", ") }) : "",
+    activeBases.length > 0 ? t("emptyNear", { base: activeBases.join(", "), radius: radiusKm }) : "",
     minBedrooms > 0 ? t("emptyBedrooms", { count: minBedrooms }) : "",
     minGuests > 0 ? t("emptyGuests", { count: minGuests }) : "",
     moveIn
@@ -253,11 +271,36 @@ export function ListingsGrid({
         clearLabel={tFilter("clearAll")}
       >
         <FilterCluster label={t("filterBase")} icon="📍" badge={pendingBases.length || undefined}>
-          <FilterCheckboxList
-            options={BASE_NAMES.map((base) => ({ value: base, label: base }))}
-            selected={pendingBases}
-            onToggle={(value) => setPendingBases((prev) => toggleIn(prev, value))}
-          />
+          <div className="flex flex-col gap-3">
+            <fieldset>
+              <legend className="mb-1.5 block font-mono text-[0.68rem] uppercase tracking-wider text-ink-soft/75">
+                {t("radiusLabel")}
+              </legend>
+              <div className="flex gap-2">
+                {RADIUS_OPTIONS_KM.map((km) => (
+                  <label
+                    key={km}
+                    className="flex flex-1 cursor-pointer items-center justify-center rounded-md border border-canvas-deep px-3 py-1.5 text-sm text-charcoal has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-olive"
+                  >
+                    <input
+                      type="radio"
+                      name="listings-radius"
+                      value={km}
+                      checked={pendingRadius === km}
+                      onChange={() => setPendingRadius(km)}
+                      className="sr-only"
+                    />
+                    {t("radiusOption", { km })}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <FilterCheckboxList
+              options={BASE_NAMES.map((base) => ({ value: base, label: base }))}
+              selected={pendingBases}
+              onToggle={(value) => setPendingBases((prev) => toggleIn(prev, value))}
+            />
+          </div>
         </FilterCluster>
 
         <FilterCluster

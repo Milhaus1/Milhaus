@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AMENITY_KEYS, type AmenityKey } from "@/lib/amenities";
+import { DEFAULT_RADIUS_KM, RADIUS_OPTIONS_KM } from "@/lib/bases";
 
 // The two "Available to" values that show a badge — "everyone" is the
 // unrestricted default with no badge, so there's nothing to filter to.
@@ -21,6 +22,8 @@ export type AvailableToFilterKey = (typeof AVAILABLE_TO_FILTER_KEYS)[number];
 
 export interface ListingFiltersUpdate {
   bases?: string[];
+  /** km around each picked base (2026-11-25) — 30 or 50. */
+  radiusKm?: number;
   amenities?: AmenityKey[];
   minBedrooms?: number;
   /** Temporary living only (2026-11-25): sleeps at least this many. */
@@ -46,6 +49,10 @@ export function useListingFilters() {
     () => (searchParams.get("base") ?? "").split(",").filter(Boolean),
     [searchParams],
   );
+  // How far around a picked base to look (Terry, 2026-11-25). Only the
+  // offered distances count; anything else falls back to the default.
+  const radiusParam = Number(searchParams.get("radius"));
+  const radiusKm = (RADIUS_OPTIONS_KM as readonly number[]).includes(radiusParam) ? radiusParam : DEFAULT_RADIUS_KM;
   const minBedrooms = Number(searchParams.get("bedrooms")) || 0;
   const minGuests = Number(searchParams.get("guests")) || 0;
   // moveIn stays a plain "YYYY-MM-DD" string — exactly what
@@ -79,6 +86,7 @@ export function useListingFilters() {
     };
 
     if (updates.bases !== undefined) set("base", updates.bases.length > 0 ? updates.bases.join(",") : null);
+    if (updates.radiusKm !== undefined) set("radius", updates.radiusKm === DEFAULT_RADIUS_KM ? null : String(updates.radiusKm));
     if (updates.amenities !== undefined) set("amenities", updates.amenities.length > 0 ? updates.amenities.join(",") : null);
     if (updates.minBedrooms !== undefined) set("bedrooms", updates.minBedrooms > 0 ? String(updates.minBedrooms) : null);
     if (updates.minGuests !== undefined) set("guests", updates.minGuests > 0 ? String(updates.minGuests) : null);
@@ -112,6 +120,7 @@ export function useListingFilters() {
   return {
     ALL_BASES,
     activeBases,
+    radiusKm,
     minBedrooms,
     minGuests,
     moveIn,
